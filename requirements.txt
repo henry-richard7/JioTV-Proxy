@@ -1,0 +1,4 @@
+uvicorn
+fastapi
+requests
+m3u8
