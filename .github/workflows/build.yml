@@ -41,7 +41,7 @@ jobs:
             CMD_BUILD: >
                 pyinstaller --onefile --console -n JioTV main.py &&
                 cd dist/ &&
-                zip -r9 JioTV JioTV.app/                
+                zip -r9 JioTV . -i JioTV.app/                
             OUT_FILE_NAME: JioTV.zip
             ASSET_MIME: application/zip
           - os: windows-latest
