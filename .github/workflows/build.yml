@@ -53,7 +53,7 @@ jobs:
               cp -r templates dist &&
               cp -r data dist &&
               cd dist/ &&
-              zip -r9 JioTV_WINDOWS .
+              powershell Compress-Archive -Path . -DestinationPath JioTV_WINDOWS.zip
             OUT_FILE_NAME: JioTV_WINDOWS.zip
             ASSET_MIME: application/zip
     steps:
