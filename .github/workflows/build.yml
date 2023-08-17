@@ -49,7 +49,7 @@ jobs:
           - os: windows-latest
             TARGET: windows
             CMD_BUILD: > 
-              pyinstaller --onefile --console -n JioTV main.py
+              pyinstaller --onefile --console -n JioTV main.py &&
               cp -r templates dist &&
               cp -r data dist &&
               cd dist/ &&
