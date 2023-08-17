@@ -40,15 +40,22 @@ jobs:
             TARGET: macos
             CMD_BUILD: >
                 pyinstaller --onefile --console -n JioTV main.py &&
+                cp -r templates dist &&
+                cp -r data dist &&
                 cd dist/ &&
-                zip -r9 JioTV . -i JioTV.app/                
-            OUT_FILE_NAME: JioTV.zip
+                zip -r9 JioTV_MACOS .                
+            OUT_FILE_NAME: JioTV_MACOS.zip
             ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows
-            CMD_BUILD: pyinstaller --onefile --console -n JioTV main.py
-            OUT_FILE_NAME: JioTV.exe
-            ASSET_MIME: application/vnd.microsoft.portable-executable
+            CMD_BUILD: > 
+              pyinstaller --onefile --console -n JioTV main.py
+              cp -r templates dist &&
+              cp -r data dist &&
+              cd dist/ &&
+              zip -r9 JioTV_WINDOWS .
+            OUT_FILE_NAME: JioTV_WINDOWS.zip
+            ASSET_MIME: application/zip
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python 3.8
