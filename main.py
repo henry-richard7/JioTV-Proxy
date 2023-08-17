@@ -14,7 +14,7 @@ import configparser
 
 def login_config():
     config = configparser.ConfigParser()
-    config.read('creds.config')
+    config.read('creds.conf')
     
     email = config['JIO-CREDS']['email']
     password = config['JIO-CREDS']['password']
