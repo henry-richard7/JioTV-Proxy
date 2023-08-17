@@ -39,14 +39,14 @@ jobs:
           - os: macos-10.15
             TARGET: macos
             CMD_BUILD: >
-                python3 -m pyinstaller --onefile --console -n JioTV main.py &&
+                pyinstaller --onefile --console -n JioTV main.py &&
                 cd dist/ &&
                 zip -r9 JioTV JioTV.app/                
             OUT_FILE_NAME: JioTV.zip
             ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows
-            CMD_BUILD: python3 -m pyinstaller --onefile --console -n JioTV main.py
+            CMD_BUILD: pyinstaller --onefile --console -n JioTV main.py
             OUT_FILE_NAME: JioTV.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
     steps:
