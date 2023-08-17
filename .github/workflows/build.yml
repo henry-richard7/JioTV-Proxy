@@ -43,8 +43,8 @@ jobs:
                 cp -r templates dist &&
                 cp -r data dist &&
                 cd dist/ &&
-                zip -r9 JioTV_MACOS .                
-            OUT_FILE_NAME: JioTV_MACOS.zip
+                zip -r9 JioTV_auto_build_MACOS .                
+            OUT_FILE_NAME: JioTV_auto_build_MACOS.zip
             ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows
@@ -53,8 +53,18 @@ jobs:
               cp -r templates dist &&
               cp -r data dist &&
               cd dist/ &&
-              powershell Compress-Archive -Path . -DestinationPath JioTV_WINDOWS.zip
-            OUT_FILE_NAME: JioTV_WINDOWS.zip
+              powershell Compress-Archive -Path . -DestinationPath JioTV_auto_build_WINDOWS.zip
+            OUT_FILE_NAME: JioTV_auto_build_WINDOWS.zip
+            ASSET_MIME: application/zip
+          - os: ubuntu-latest
+            TARGET: linux
+            CMD_BUILD: >
+                pyinstaller --onefile --console -n JioTV main.py &&
+                cp -r templates dist &&
+                cp -r data dist &&
+                cd dist/ &&
+                zip -r9 JioTV_auto_build_LINUX .
+            OUT_FILE_NAME: JioTV_auto_build_LINUX.zip
             ASSET_MIME: application/zip
     steps:
     - uses: actions/checkout@v1
