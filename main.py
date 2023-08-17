@@ -10,7 +10,18 @@ from time import time
 
 from os import path
 
-def middleware_logic():
+import configparser
+
+def login_config():
+    config = configparser.ConfigParser()
+    config.read('creds.config')
+    
+    email = config['JIO-CREDS']['email']
+    password = config['JIO-CREDS']['password']
+
+    login(email,password)
+
+def relogin():
     """
     Check if the user is logged in and if the session has expired.
 
@@ -29,9 +40,11 @@ def middleware_logic():
         return "ALL OK"
     
     elif path.exists(path.join('data', 'jio_headers.json')) and expire_time < current_time:
+        login_config()
         return "Expired"
     
     else:
+        login_config()
         return "Not Logged In"
 
 app = FastAPI()
@@ -53,12 +66,9 @@ async def middleware(request: Request, call_next):
         response = await call_next(request)
         return response
     else:
-        status = middleware_logic()
-        if status == "ALL OK":
-            return await call_next(request)
-        else:
-            print(status)
-            return PlainTextResponse(status, media_type="text/plain",status_code=401)
+        relogin()
+        response = await call_next(request)
+        return response
 
 @app.get('/createToken')
 def createToken(email,password):
