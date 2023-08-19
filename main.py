@@ -83,6 +83,17 @@ def createToken(email,password):
         str: The login response containing the token.
     """
     login_response = login(email,password)
+
+    # Write username and password to config file
+    config = configparser.ConfigParser()
+    config.read('creds.conf')
+    config['JIO-CREDS']['email'] = email
+    config['JIO-CREDS']['password'] = password
+
+    if login_response == "[SUCCESS]":
+        with open('creds.conf', 'w') as configfile:
+            config.write(configfile)
+
     return login_response
 
 @app.get("/login")
