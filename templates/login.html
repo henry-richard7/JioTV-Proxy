@@ -1,0 +1,156 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>JIO TV Login</title>
+    <style>
+        body {
+            font-family: "Lato", sans-serif;
+        }
+
+
+        .main-head {
+            height: 150px;
+            background: #FFF;
+
+        }
+
+        .sidenav {
+            height: 100%;
+            background-color: rgb(167, 29, 29);
+            overflow-x: hidden;
+            padding-top: 20px;
+        }
+
+
+        .main {
+            padding: 0px 10px;
+        }
+
+        @media screen and (max-height: 450px) {
+            .sidenav {
+                padding-top: 15px;
+            }
+        }
+
+        @media screen and (max-width: 450px) {
+            .login-form {
+                margin-top: 10%;
+            }
+
+            .register-form {
+                margin-top: 10%;
+            }
+        }
+
+        @media screen and (min-width: 768px) {
+            .main {
+                margin-left: 40%;
+            }
+
+            .sidenav {
+                width: 40%;
+                position: fixed;
+                z-index: 1;
+                top: 0;
+                left: 0;
+            }
+
+            .login-form {
+                margin-top: 80%;
+            }
+
+            .register-form {
+                margin-top: 20%;
+            }
+        }
+
+
+        .login-main-text {
+            margin-top: 20%;
+            padding: 60px;
+            color: #fff;
+        }
+
+        .login-main-text h2 {
+            font-weight: 300;
+        }
+
+        .btn-black {
+            background-color: #000 !important;
+            color: #fff;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+
+<body>
+
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+    <!------ Include the above in your HEAD tag ---------->
+
+    <div class="sidenav">
+        <div class="login-main-text">
+            <h2>JIO TV<br> Login Page</h2>
+            <p>Login To JIO TV to start watching Live TV.</p>
+        </div>
+    </div>
+
+
+    <div class="main">
+        <div class="col-md-6 col-sm-12">
+            <div class="login-form">
+
+                <div class="form-group"></div>
+                <label>Email</label>
+                <input type="text" class="form-control" placeholder="Email" id="email">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" class="form-control" placeholder="Password" id="password">
+            </div>
+
+            <button onclick="enviar()" class="btn btn-black">Login</button>
+
+        </div>
+    </div>
+    </div>
+
+    <script>
+        function enviar() {
+
+            var email = $("#email").val();
+            var passsword = $("#password").val();
+
+            console.log();
+            setTimeout(
+                function () {
+                    $.ajax({
+                        url: '/createToken?email=' + email + '&password=' + passsword,
+                        type: 'GET',
+                        async: true,
+                        success: function (result) {
+                            if (result === "[SUCCESS]") {
+                                console.log(result)
+                                alert("Successfully Logged In")
+                            } else if (result === "[FAILED]") {
+                                alert("Failed To Login check Email & Password!")
+
+                            }
+
+                        }
+                    });
+                }, 500);
+
+        }
+    </script>
+
+
+</body>
+
+</html>
