@@ -13,7 +13,7 @@ from os import path
 import sqlite3
 import logging
 
-logger = logging.getLogger("fastapi")
+logger = logging.getLogger("uvicorn")
 
 
 def store_creds(email, password, expire_time):
@@ -35,7 +35,6 @@ def store_creds(email, password, expire_time):
 
 
 def get_expire():
-    # Get only expire time from sqlite
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
     cursor.execute("""SELECT expire FROM creds""")
@@ -44,14 +43,35 @@ def get_expire():
     return expire_time
 
 
+def clear_creds():
+    db = sqlite3.connect("creds.db")
+    cursor = db.cursor()
+    cursor.execute("""DELETE FROM creds""")
+    db.commit()
+    db.close()
+
+
 def get_creds():
-    # Get only email and password as dict
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
     cursor.execute("""SELECT email,password FROM creds""")
     creds_ = cursor.fetchone()
     db.close()
     return creds_
+
+
+def create_creds():
+    db = sqlite3.connect("creds.db")
+    cursor = db.cursor()
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS creds(
+        email TEXT,
+        password TEXT,
+        expire NUMERIC
+    )"""
+    )
+    db.commit()
+    db.close()
 
 
 def check_session():
@@ -87,8 +107,19 @@ def check_session():
         return "Expired"
 
     else:
-        logger.warning("Not Logged In. Go to http://localhost:8000/login")
+        logger.warning(f"Not Logged In. Go to http://{get_local_ip()}:8000/login")
         return "Not Logged In"
+
+
+def welcome_msg():
+    server_ip = get_local_ip()
+    print("===================================================")
+    print("Welcome to JioTV-Proxy")
+    print("Version 1.3")
+    print(f"Please Login at http://{server_ip}:8000/login")
+    print(f"Playlist: http://{server_ip}:8000/playlist.m3u")
+    print("===================================================")
+    print()
 
 
 app = FastAPI()
@@ -116,7 +147,7 @@ async def middleware(request: Request, call_next):
             content={
                 "status_code": 403,
                 "error": "Session not authenticated.",
-                "details": "Seems like you are not logged in, please login by going to http://localhost:8000/login",
+                "details": f"Seems like you are not logged in, please login by going to http://{get_local_ip}:8000/login",
             },
             status_code=403,
         )
@@ -139,6 +170,13 @@ def createToken(email, password):
     Returns:
         str: The login response containing the token.
     """
+    if path.exists(path.join("creds.db")):
+        logger.warning("[!] Creds already available. Clearing existing creds.")
+        clear_creds()
+
+    else:
+        logger.info("[-] First Time Logging in.")
+
     login_response = login(email, password)
     if login_response == "[SUCCESS]":
         store_creds(email, password, time() + 432000)
@@ -273,4 +311,5 @@ async def play(uri, cid, cookie):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    welcome_msg()
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="warning")
