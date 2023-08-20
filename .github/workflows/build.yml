@@ -39,7 +39,7 @@ jobs:
           - os: macos-latest
             TARGET: macos
             CMD_BUILD: >
-                pyinstaller --onefile --console -n JioTV main.py &&
+                pyinstaller --onefile --console -n JioTV -i resources/JioTV_logo.icns main.py &&
                 cp -r templates dist &&
                 cp -r data dist &&
                 cp creds.conf dist &&
@@ -50,12 +50,12 @@ jobs:
           - os: windows-latest
             TARGET: windows
             CMD_BUILD: > 
-              pyinstaller --onefile --console -n JioTV main.py &&
+              pyinstaller --onefile --console -n JioTV  -i resources\JioTV_logo.ico main.py &&
               cp -r templates dist &&
               cp -r data dist &&
               cp creds.conf dist &&
               cd dist/ &&
-              powershell Compress-Archive -Path . -DestinationPath JioTV_auto_build_WINDOWS_x86_64.zip
+              powershell Compress-Archive -Path .\* -DestinationPath JioTV_auto_build_WINDOWS_x86_64.zip
             OUT_FILE_NAME: JioTV_auto_build_WINDOWS_x86_64.zip
             ASSET_MIME: application/zip
           - os: ubuntu-latest
