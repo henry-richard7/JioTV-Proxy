@@ -188,7 +188,6 @@ def get_ts(uri, cid, cookie):
     headers["cookie"] = cookie
 
     resp = requests.get(uri, headers=headers)
-    print(resp.status_code)
     return resp.content
 
 
@@ -317,7 +316,6 @@ def get_channel_url(channel_id):
 
     for media in firast_m3u8_parsed.media:
         if media.type == "AUDIO" and media.uri is not None:
-            # print(media.uri)
             final_ = final_.replace(
                 media.uri,
                 f"/get_audio?uri={base_url}/{media.uri}&cid={channel_id}&cookie={cookie}",
