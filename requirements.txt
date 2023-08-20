@@ -1,6 +1,0 @@
-uvicorn
-fastapi
-requests
-m3u8
-pyinstaller
-jinja2
