@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse, Response, JSONResponse
 
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 
 from Modules.utils import *
 from time import time
@@ -115,15 +116,26 @@ def welcome_msg():
     server_ip = get_local_ip()
     print("===================================================")
     print("Welcome to JioTV-Proxy")
-    print("Version 1.3")
+    print(f"Web Player: http://{server_ip}:8000/")
     print(f"Please Login at http://{server_ip}:8000/login")
-    print(f"Playlist: http://{server_ip}:8000/playlist.m3u")
+    print(f"Playlist m3u: http://{server_ip}:8000/playlist.m3u")
     print("===================================================")
     print()
 
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get('/')
+async def index(request: Request):
+    channels = json.load(open("data/playlists.json"))
+    return templates.TemplateResponse("index.html", {"request": request,'channels':channels})
+
+@app.get('/player')
+async def player(request: Request, cid):
+    print(cid)
+    return templates.TemplateResponse("player.html", {"request": request, "cid": cid})
 
 
 @app.middleware("http")
