@@ -227,7 +227,6 @@ def get_audio(uri, cid, cookie):
 
 def get_vtt(uri, cid, cookie):
     resp = get_ts(uri, cid, cookie).decode()
-    print(resp)
     return resp
 
 
