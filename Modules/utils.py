@@ -434,3 +434,22 @@ def get_playlists(host):
         m3u8 += f'#EXTINF:-1 tvg-id="{channel_id}" group-title="{channel_genre}" tvg-logo="{channel_logo}",{channel_name}\nhttp://{host}/m3u8?cid={channel_id}\n'
 
     return m3u8
+
+def playlist_json():
+    channels = json.load(open("data/channels.json"))
+    playlists = list()
+
+    for channel in channels:
+        channel_logo = (
+            "http://jiotv.catchup.cdn.jio.com/dare_images/images/" + channel["logoUrl"]
+        )
+        playlists.append({
+            "name": channel["channel_name"],
+            "id": channel["channel_id"],
+            "image": channel_logo,
+            "url": f"/m3u8?cid={channel['channel_id']}"
+        })
+    
+    # Write playlists to file
+    with open("data/playlists.json", "w") as f:
+        json.dump(playlists, f,indent=4, sort_keys=True)
