@@ -259,6 +259,12 @@ async def get_subtitles(uri, cid, cookie):
     return Response(get_subs(uri, cid, cookie))
 
 
+@app.get("/get_vtt")
+async def get_vtt_(uri, cid, cookie):
+    resp = get_vtt(uri, cid, cookie)
+    return PlainTextResponse(resp, media_type="text/vtt")
+
+
 @app.get("/get_ts")
 async def get_tts(uri, cid, cookie):
     """

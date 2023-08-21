@@ -225,6 +225,12 @@ def get_audio(uri, cid, cookie):
     return audio_m3u8
 
 
+def get_vtt(uri, cid, cookie):
+    resp = get_ts(uri, cid, cookie).decode()
+    print(resp)
+    return resp
+
+
 def get_subs(uri, cid, cookie):
     """
     Retrieves the subdomains for a given URI.
@@ -237,7 +243,19 @@ def get_subs(uri, cid, cookie):
     Returns:
         str: Gets subtitles URI.
     """
+    base_url = uri.split("/")
+    base_url.pop()
+    base_url = "/".join(base_url)
+
     resp = get_ts(uri, cid, cookie).decode()
+    parsed_subs = m3u8.loads(resp)
+
+    for segment in parsed_subs.segments:
+        resp = resp.replace(
+            segment.uri,
+            f"/get_vtt?uri={base_url}/{segment.uri.replace('.webvtt','.vtt')}&cid={cid}&cookie={cookie}",
+        )
+
     return resp
 
 
