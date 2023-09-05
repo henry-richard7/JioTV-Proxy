@@ -42,6 +42,7 @@ jobs:
                 pyinstaller --onefile --console -n JioTV -i resources/JioTV_logo.icns main.py &&
                 cp -r templates dist &&
                 cp -r data dist &&
+                cp -r static dist &&
                 cd dist/ &&
                 zip -r9 JioTV_auto_build_MACOS_x86_64 .                
             OUT_FILE_NAME: JioTV_auto_build_MACOS_x86_64.zip
@@ -52,6 +53,7 @@ jobs:
               pyinstaller --onefile --console -n JioTV  -i resources\JioTV_logo.ico main.py &&
               cp -r templates dist &&
               cp -r data dist &&
+              cp -r static dist &&
               cd dist/ &&
               powershell Compress-Archive -Path .\* -DestinationPath JioTV_auto_build_WINDOWS_x86_64.zip
             OUT_FILE_NAME: JioTV_auto_build_WINDOWS_x86_64.zip
@@ -62,6 +64,7 @@ jobs:
                 pyinstaller --onefile --console -n JioTV main.py &&
                 cp -r templates dist &&
                 cp -r data dist &&
+                cp -r static dist &&
                 cd dist/ &&
                 zip -r9 JioTV_auto_build_LINUX_x86_64 .
             OUT_FILE_NAME: JioTV_auto_build_LINUX_x86_64.zip
