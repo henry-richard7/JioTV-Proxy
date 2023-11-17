@@ -4,6 +4,9 @@ import time
 import socket
 import json
 import requests
+import urllib3
+
+urllib3.disable_warnings()
 
 # Constants
 IMG_PUBLIC = "https://jioimages.cdn.jio.com/imagespublic/"
@@ -58,7 +61,9 @@ def get_channels():
         "User-Agent": "plaYtv/7.0.8 (Linux;Android 7.1.2) ExoPlayerLib/2.11.7",
     }
 
-    response = requests.get(CHANNELS_SRC_NEW, headers=headers).json()["result"]
+    response = requests.get(CHANNELS_SRC_NEW, headers=headers, verify=False).json()[
+        "result"
+    ]
     with open(r"data\channels.json", "w") as f:
         json.dump(response, f, ensure_ascii=False, indent=4)
 
@@ -98,6 +103,7 @@ def login(email, password):
             "x-api-key": "l7xx75e822925f184370b2e25170c5d5820a",
             "Content-Type": "application/json",
         },
+        verify=False,
     ).json()
 
     if resp.get("ssoToken", "") != "":
@@ -166,7 +172,7 @@ def get_key(uri, cid, cookie):
     headers["cookie"] = cookie
     headers["Content-type"] = "application/octet-stream"
 
-    resp = requests.get(uri, headers=headers).content
+    resp = requests.get(uri, headers=headers, verify=False).content
     return resp
 
 
@@ -187,7 +193,7 @@ def get_ts(uri, cid, cookie):
     headers["srno"] = str(uuid4())
     headers["cookie"] = cookie
 
-    resp = requests.get(uri, headers=headers)
+    resp = requests.get(uri, headers=headers, verify=False)
     return resp.content
 
 
@@ -303,7 +309,7 @@ def get_channel_url(channel_id):
     """
     rjson = {"channel_id": int(channel_id), "stream_type": "Seek"}
     resp = requests.post(
-        GET_CHANNEL_URL, headers=getChannelHeaders(), json=rjson
+        GET_CHANNEL_URL, headers=getChannelHeaders(), json=rjson, verify=False
     ).json()
 
     onlyUrl = resp.get("bitrates", "").get("high", "")
@@ -314,7 +320,7 @@ def get_channel_url(channel_id):
 
     cookie = "__hdnea__" + resp.get("result", "").split("__hdnea__")[-1]
 
-    first_m3u8 = requests.get(onlyUrl, headers=getChannelHeaders()).text
+    first_m3u8 = requests.get(onlyUrl, headers=getChannelHeaders(), verify=False).text
     firast_m3u8_parsed = m3u8.loads(first_m3u8)
 
     final_ = first_m3u8
@@ -361,7 +367,7 @@ def final_play(uri, cid, cookie):
     headers["srno"] = str(uuid4())
     headers["cookie"] = cookie
 
-    resp = requests.get(uri, headers=headers).text
+    resp = requests.get(uri, headers=headers, verify=False).text
     parsed_m3u8 = m3u8.loads(resp)
 
     base_url = uri.split("/")
@@ -435,6 +441,7 @@ def get_playlists(host):
 
     return m3u8
 
+
 def playlist_json():
     channels = json.load(open("data/channels.json"))
     playlists = list()
@@ -443,13 +450,15 @@ def playlist_json():
         channel_logo = (
             "http://jiotv.catchup.cdn.jio.com/dare_images/images/" + channel["logoUrl"]
         )
-        playlists.append({
-            "name": channel["channel_name"],
-            "id": channel["channel_id"],
-            "image": channel_logo,
-            "url": f"/m3u8?cid={channel['channel_id']}"
-        })
-    
+        playlists.append(
+            {
+                "name": channel["channel_name"],
+                "id": channel["channel_id"],
+                "image": channel_logo,
+                "url": f"/m3u8?cid={channel['channel_id']}",
+            }
+        )
+
     # Write playlists to file
     with open("data/playlists.json", "w") as f:
-        json.dump(playlists, f,indent=4, sort_keys=True)
+        json.dump(playlists, f, indent=4, sort_keys=True)

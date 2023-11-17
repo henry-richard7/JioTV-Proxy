@@ -11,3 +11,5 @@
 # Built Visual Studio Code Extensions
 *.vsix
 static/.DS_Store
+creds.db
+data/jio_headers.json

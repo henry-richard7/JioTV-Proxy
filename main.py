@@ -127,14 +127,17 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-@app.get('/')
+
+@app.get("/")
 async def index(request: Request):
     channels = json.load(open("data/playlists.json"))
-    return templates.TemplateResponse("index.html", {"request": request,'channels':channels})
+    return templates.TemplateResponse(
+        "index.html", {"request": request, "channels": channels}
+    )
 
-@app.get('/player')
+
+@app.get("/player")
 async def player(request: Request, cid):
-    print(cid)
     return templates.TemplateResponse("player.html", {"request": request, "cid": cid})
 
 
