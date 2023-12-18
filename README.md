@@ -2,6 +2,10 @@
 
 JioTV proxy developed using Python and FastAPI framework.
 
+# New Changes
+
+- For Sony Liv channels I have added direct stream links instead of JIO-TV stream. [Found It From Here.](https://github.com/dhruv-2015/JIOTVServer/blob/main/utils/genPlaylist.mjs)
+
 # How to use (From Binary)
 
 - Download the latest for your platform from [Releases](https://github.com/henry-richard7/JioTV-Proxy/releases)
