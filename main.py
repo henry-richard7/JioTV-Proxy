@@ -1,4 +1,5 @@
 import uvicorn
+import json
 
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse, Response, JSONResponse
@@ -6,7 +7,7 @@ from fastapi.responses import PlainTextResponse, Response, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
-from Modules.utils import *
+from Modules.utils import JioTV
 from time import time
 
 from os import path
@@ -15,6 +16,8 @@ import sqlite3
 import logging
 
 logger = logging.getLogger("uvicorn")
+jiotv_obj = JioTV()
+localip = jiotv_obj.get_local_ip()
 
 
 def store_creds(email, password, expire_time):
@@ -103,22 +106,21 @@ def check_session():
         logger.warning("[!] Session has expired and auto relogin initiated.")
 
         email, password = get_creds()
-        login(email, password)
+        jiotv_obj.login(email, password)
 
         return "Expired"
 
     else:
-        logger.warning(f"Not Logged In. Go to http://{get_local_ip()}:8000/login")
+        logger.warning(f"Not Logged In. Go to http://{localip}:8000/login")
         return "Not Logged In"
 
 
 def welcome_msg():
-    server_ip = get_local_ip()
     print("===================================================")
     print("Welcome to JioTV-Proxy")
-    print(f"Web Player: http://{server_ip}:8000/")
-    print(f"Please Login at http://{server_ip}:8000/login")
-    print(f"Playlist m3u: http://{server_ip}:8000/playlist.m3u")
+    print(f"Web Player: http://{localip}:8000/")
+    print(f"Please Login at http://{localip}:8000/login")
+    print(f"Playlist m3u: http://{localip}:8000/playlist.m3u")
     print("===================================================")
     print()
 
@@ -162,7 +164,7 @@ async def middleware(request: Request, call_next):
             content={
                 "status_code": 403,
                 "error": "Session not authenticated.",
-                "details": f"Seems like you are not logged in, please login by going to http://{get_local_ip}:8000/login",
+                "details": f"Seems like you are not logged in, please login by going to http://{localip}:8000/login",
             },
             status_code=403,
         )
@@ -192,7 +194,7 @@ def createToken(email, password):
     else:
         logger.info("[-] First Time Logging in.")
 
-    login_response = login(email, password)
+    login_response = jiotv_obj.login(email, password)
     if login_response == "[SUCCESS]":
         store_creds(email, password, time() + 432000)
         return login_response
@@ -222,7 +224,7 @@ async def get_playlist(request: Request):
     Returns:
         A PlainTextResponse object containing the playlist in the specified media type.
     """
-    playlist_response = await get_playlists(request.headers.get("host"))
+    playlist_response = await jiotv_obj.get_playlists(request.headers.get("host"))
     return PlainTextResponse(playlist_response, media_type="application/x-mpegurl")
 
 
@@ -237,7 +239,7 @@ async def get_m3u8(cid):
     Returns:
     - The m3u8 playlist for the specified channel. (type: PlainTextResponse)
     """
-    channel_response = await get_channel_url(cid)
+    channel_response = await jiotv_obj.get_channel_url(cid)
     return PlainTextResponse(channel_response, media_type="application/x-mpegurl")
 
 
@@ -254,7 +256,7 @@ async def get_multi_audio(uri, cid, cookie):
     Returns:
     - Response: The response object containing the audio.
     """
-    audio_response = await get_audio(uri, cid, cookie)
+    audio_response = await jiotv_obj.get_audio(uri, cid, cookie)
     return Response(audio_response, media_type="application/x-mpegurl")
 
 
@@ -272,13 +274,13 @@ async def get_subtitles(uri, cid, cookie):
         str: The subtitles for the specified URI.
 
     """
-    subs_response = await get_subs(uri, cid, cookie)
+    subs_response = await jiotv_obj.get_subs(uri, cid, cookie)
     return Response(subs_response)
 
 
 @app.get("/get_vtt")
 async def get_vtt_(uri, cid, cookie):
-    resp = await get_vtt(uri, cid, cookie)
+    resp = await jiotv_obj.get_vtt(uri, cid, cookie)
     return PlainTextResponse(resp, media_type="text/vtt")
 
 
@@ -295,7 +297,7 @@ async def get_tts(uri, cid, cookie):
     Returns:
     - Response: Gets the segments from the specified URI.
     """
-    tts_response = await get_ts(uri, cid, cookie)
+    tts_response = await jiotv_obj.get_ts(uri, cid, cookie)
     return Response(tts_response, media_type="video/MP2T")
 
 
@@ -312,7 +314,7 @@ async def get_keys(uri, cid, cookie):
     Returns:
     - Response: The response containing the DRM key.
     """
-    key_response = await get_key(uri, cid, cookie)
+    key_response = await jiotv_obj.get_key(uri, cid, cookie)
     return Response(key_response, media_type="application/octet-stream")
 
 
@@ -330,7 +332,7 @@ async def play(uri, cid, cookie):
     Returns:
     - A `PlainTextResponse` object with the media type set to "application/x-mpegurl".
     """
-    final_play_response = await final_play(uri, cid, cookie)
+    final_play_response = await jiotv_obj.final_play(uri, cid, cookie)
     return PlainTextResponse(final_play_response, media_type="application/x-mpegurl")
 
 
