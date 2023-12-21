@@ -222,9 +222,8 @@ async def get_playlist(request: Request):
     Returns:
         A PlainTextResponse object containing the playlist in the specified media type.
     """
-    return PlainTextResponse(
-        get_playlists(request.headers.get("host")), media_type="application/x-mpegurl"
-    )
+    playlist_response = await get_playlists(request.headers.get("host"))
+    return PlainTextResponse(playlist_response, media_type="application/x-mpegurl")
 
 
 @app.get("/m3u8")
@@ -238,7 +237,8 @@ async def get_m3u8(cid):
     Returns:
     - The m3u8 playlist for the specified channel. (type: PlainTextResponse)
     """
-    return PlainTextResponse(get_channel_url(cid), media_type="application/x-mpegurl")
+    channel_response = await get_channel_url(cid)
+    return PlainTextResponse(channel_response, media_type="application/x-mpegurl")
 
 
 @app.get("/get_audio")
@@ -254,7 +254,8 @@ async def get_multi_audio(uri, cid, cookie):
     Returns:
     - Response: The response object containing the audio.
     """
-    return Response(get_audio(uri, cid, cookie), media_type="application/x-mpegurl")
+    audio_response = await get_audio(uri, cid, cookie)
+    return Response(audio_response, media_type="application/x-mpegurl")
 
 
 @app.get("/get_subs")
@@ -271,12 +272,13 @@ async def get_subtitles(uri, cid, cookie):
         str: The subtitles for the specified URI.
 
     """
-    return Response(get_subs(uri, cid, cookie))
+    subs_response = await get_subs(uri, cid, cookie)
+    return Response(subs_response)
 
 
 @app.get("/get_vtt")
 async def get_vtt_(uri, cid, cookie):
-    resp = get_vtt(uri, cid, cookie)
+    resp = await get_vtt(uri, cid, cookie)
     return PlainTextResponse(resp, media_type="text/vtt")
 
 
@@ -293,7 +295,8 @@ async def get_tts(uri, cid, cookie):
     Returns:
     - Response: Gets the segments from the specified URI.
     """
-    return Response(get_ts(uri, cid, cookie), media_type="video/MP2T")
+    tts_response = await get_ts(uri, cid, cookie)
+    return Response(tts_response, media_type="video/MP2T")
 
 
 @app.get("/get_key")
@@ -309,7 +312,8 @@ async def get_keys(uri, cid, cookie):
     Returns:
     - Response: The response containing the DRM key.
     """
-    return Response(get_key(uri, cid, cookie), media_type="application/octet-stream")
+    key_response = await get_key(uri, cid, cookie)
+    return Response(key_response, media_type="application/octet-stream")
 
 
 @app.get("/play")
@@ -326,9 +330,8 @@ async def play(uri, cid, cookie):
     Returns:
     - A `PlainTextResponse` object with the media type set to "application/x-mpegurl".
     """
-    return PlainTextResponse(
-        final_play(uri, cid, cookie), media_type="application/x-mpegurl"
-    )
+    final_play_response = await final_play(uri, cid, cookie)
+    return PlainTextResponse(final_play_response, media_type="application/x-mpegurl")
 
 
 if __name__ == "__main__":

@@ -1,12 +1,9 @@
 from uuid import uuid4
 import m3u8
-import time
 import socket
 import json
-import requests
-import urllib3
+import httpx
 
-urllib3.disable_warnings()
 
 # Constants
 IMG_PUBLIC = "https://jioimages.cdn.jio.com/imagespublic/"
@@ -43,7 +40,7 @@ def get_local_ip():
     return IP
 
 
-def get_channels():
+async def get_channels():
     """
     Retrieves channels from the specified source and saves them to a JSON file.
 
@@ -61,9 +58,8 @@ def get_channels():
         "User-Agent": "plaYtv/7.0.8 (Linux;Android 7.1.2) ExoPlayerLib/2.11.7",
     }
 
-    response = requests.get(CHANNELS_SRC_NEW, headers=headers, verify=False).json()[
-        "result"
-    ]
+    response = await httpx.AsyncClient().get(CHANNELS_SRC_NEW, headers=headers)
+    response = response.json()["result"]
     with open(r"data\channels.json", "w") as f:
         json.dump(response, f, ensure_ascii=False, indent=4)
 
@@ -95,7 +91,7 @@ def login(email, password):
         },
     }
 
-    resp = requests.post(
+    resp = httpx.post(
         "https://api.jio.com/v3/dip/user/unpw/verify",
         json=body,
         headers={
@@ -103,8 +99,9 @@ def login(email, password):
             "x-api-key": "l7xx75e822925f184370b2e25170c5d5820a",
             "Content-Type": "application/json",
         },
-        verify=False,
-    ).json()
+    )
+
+    resp = resp.json()
 
     if resp.get("ssoToken", "") != "":
         _CREDS = {
@@ -154,7 +151,7 @@ def getHeaders():
         return json.load(f)
 
 
-def get_key(uri, cid, cookie):
+async def get_key(uri, cid, cookie):
     """
     Retrieves a key from the specified URI using the provided channel ID and cookie.
 
@@ -172,11 +169,12 @@ def get_key(uri, cid, cookie):
     headers["cookie"] = cookie
     headers["Content-type"] = "application/octet-stream"
 
-    resp = requests.get(uri, headers=headers, verify=False).content
+    resp = await httpx.AsyncClient().get(uri, headers=headers)
+    resp = resp.content
     return resp
 
 
-def get_ts(uri, cid, cookie):
+async def get_ts(uri, cid, cookie):
     """
     Retrieves the content from a given URI using the GET method and returns the response content.
 
@@ -193,11 +191,11 @@ def get_ts(uri, cid, cookie):
     headers["srno"] = str(uuid4())
     headers["cookie"] = cookie
 
-    resp = requests.get(uri, headers=headers, verify=False)
+    resp = await httpx.AsyncClient().get(uri, headers=headers)
     return resp.content
 
 
-def get_audio(uri, cid, cookie):
+async def get_audio(uri, cid, cookie):
     """
     Generate the audio m3u8 playlist with modified URLs.
 
@@ -213,7 +211,8 @@ def get_audio(uri, cid, cookie):
     base_url.pop()
     base_url = "/".join(base_url)
 
-    audio_m3u8 = get_ts(uri, cid, cookie).decode()
+    audio_m3u8 = await get_ts(uri, cid, cookie)
+    audio_m3u8 = audio_m3u8.decode()
 
     parsed_audio_m3u8 = m3u8.loads(audio_m3u8)
 
@@ -231,12 +230,13 @@ def get_audio(uri, cid, cookie):
     return audio_m3u8
 
 
-def get_vtt(uri, cid, cookie):
-    resp = get_ts(uri, cid, cookie).decode()
+async def get_vtt(uri, cid, cookie):
+    resp = await get_ts(uri, cid, cookie)
+    resp = resp.decode()
     return resp
 
 
-def get_subs(uri, cid, cookie):
+async def get_subs(uri, cid, cookie):
     """
     Retrieves the subdomains for a given URI.
 
@@ -252,7 +252,8 @@ def get_subs(uri, cid, cookie):
     base_url.pop()
     base_url = "/".join(base_url)
 
-    resp = get_ts(uri, cid, cookie).decode()
+    resp = await get_ts(uri, cid, cookie)
+    resp = resp.decode()
     parsed_subs = m3u8.loads(resp)
 
     for segment in parsed_subs.segments:
@@ -294,7 +295,7 @@ def getChannelHeaders():
     }
 
 
-def get_channel_url(channel_id):
+async def get_channel_url(channel_id):
     """
     Retrieves the URL of a channel based on its ID.
 
@@ -308,9 +309,11 @@ def get_channel_url(channel_id):
         None: Does not raise any exceptions.
     """
     rjson = {"channel_id": int(channel_id), "stream_type": "Seek"}
-    resp = requests.post(
-        GET_CHANNEL_URL, headers=getChannelHeaders(), json=rjson, verify=False
-    ).json()
+    resp = await httpx.AsyncClient().post(
+        GET_CHANNEL_URL, headers=getChannelHeaders(), json=rjson
+    )
+
+    resp = resp.json()
 
     onlyUrl = resp.get("bitrates", "").get("high", "")
 
@@ -320,7 +323,9 @@ def get_channel_url(channel_id):
 
     cookie = "__hdnea__" + resp.get("result", "").split("__hdnea__")[-1]
 
-    first_m3u8 = requests.get(onlyUrl, headers=getChannelHeaders(), verify=False).text
+    first_m3u8 = await httpx.AsyncClient().get(onlyUrl, headers=getChannelHeaders())
+    first_m3u8 = first_m3u8.text
+
     firast_m3u8_parsed = m3u8.loads(first_m3u8)
 
     final_ = first_m3u8
@@ -347,7 +352,7 @@ def get_channel_url(channel_id):
     return final_
 
 
-def final_play(uri, cid, cookie):
+async def final_play(uri, cid, cookie):
     """
     Fetches and processes a playlist file from the given URI.
 
@@ -367,7 +372,9 @@ def final_play(uri, cid, cookie):
     headers["srno"] = str(uuid4())
     headers["cookie"] = cookie
 
-    resp = requests.get(uri, headers=headers, verify=False).text
+    resp = await httpx.AsyncClient().get(uri, headers=headers)
+    resp = resp.text
+
     parsed_m3u8 = m3u8.loads(resp)
 
     base_url = uri.split("/")
@@ -390,9 +397,10 @@ def final_play(uri, cid, cookie):
     return temp_text
 
 
-def get_playlists(host):
+async def get_playlists(host):
     url = "https://jiotv.data.cdn.jio.com/apis/v1.4/getMobileChannelList/get/?os=android&devicetype=phone"
-    response = requests.get(url).json()
+    response = await httpx.AsyncClient().get(url)
+    response = response.json()
 
     channels = response["result"]
 
