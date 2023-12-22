@@ -225,6 +225,7 @@ def createToken(email, password):
     login_response = jiotv_obj.login(email, password)
     if login_response == "[SUCCESS]":
         store_creds(email, password, time() + 432000)
+        jiotv_obj.update_headers()
         return login_response
 
     return login_response
