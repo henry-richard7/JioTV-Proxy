@@ -38,6 +38,24 @@ def store_creds(email, password, expire_time):
     db.close()
 
 
+def update_expire_time(email, password):
+    expire_time = time() + 432000
+
+    db = sqlite3.connect("creds.db")
+    cursor = db.cursor()
+
+    cursor.execute(
+        """UPDATE creds SET expire = ? WHERE email = ? and password = ?""",
+        (
+            expire_time,
+            email,
+            password,
+        ),
+    )
+    db.commit()
+    db.close()
+
+
 def get_expire():
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
@@ -173,6 +191,8 @@ async def middleware(request: Request, call_next):
             email, password = get_creds()
 
             jiotv_obj.login(email, password)
+            update_expire_time(email=email, password=password)
+            jiotv_obj.update_headers()
 
             logger.info("[*] Session Refreshed.")
             response = await call_next(request)

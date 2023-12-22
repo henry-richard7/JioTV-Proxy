@@ -42,6 +42,20 @@ class JioTV:
                 "osversion": "9",
             }
 
+    def update_headers(self):
+        self.auth_headers = json.load(open(path.join("data", "jio_headers.json"), "r"))
+        self.channel_headers = {
+            "ssotoken": self.auth_headers["ssotoken"],
+            "userId": self.auth_headers["userid"],
+            "uniqueId": self.auth_headers["uniqueid"],
+            "crmid": self.auth_headers["crmid"],
+            "user-agent": "plaYtv/7.0.8 (Linux;Android 9) ExoPlayerLib/2.11.7",
+            "deviceid": self.auth_headers["deviceId"],
+            "devicetype": "phone",
+            "os": "android",
+            "osversion": "9",
+        }
+
     def get_local_ip(self):
         """
         Retrieves the local IP address of the machine.
