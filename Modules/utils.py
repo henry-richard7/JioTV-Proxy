@@ -228,9 +228,10 @@ class JioTV:
             )
 
         for key in parsed_audio_m3u8.keys:
-            audio_m3u8 = audio_m3u8.replace(
-                key.uri, f"/get_key?uri={key.uri}&cid={cid}&cookie={cookie}"
-            )
+            if key is not None:
+                audio_m3u8 = audio_m3u8.replace(
+                    key.uri, f"/get_key?uri={key.uri}&cid={cid}&cookie={cookie}"
+                )
 
         return audio_m3u8
 
@@ -363,9 +364,10 @@ class JioTV:
             )
 
         for key in parsed_m3u8.keys:
-            temp_text = temp_text.replace(
-                key.uri, f"/get_key?uri={key.uri}&cid={cid}&cookie={cookie}"
-            )
+            if key is not None:
+                temp_text = temp_text.replace(
+                    key.uri, f"/get_key?uri={key.uri}&cid={cid}&cookie={cookie}"
+                )
 
         return temp_text
 
