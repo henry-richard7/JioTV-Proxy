@@ -103,10 +103,7 @@ def check_session():
         path.exists(path.join("data", "jio_headers.json"))
         and expire_time < current_time
     ):
-        logger.warning("[!] Session has expired and auto relogin initiated.")
-
-        email, password = get_creds()
-        jiotv_obj.login(email, password)
+        logger.warning("[!] Session has expired")
 
         return "Expired"
 
@@ -159,20 +156,31 @@ async def middleware(request: Request, call_next):
         response = await call_next(request)
         return response
 
-    elif check_session() == "Not Logged In":
-        return JSONResponse(
-            content={
-                "status_code": 403,
-                "error": "Session not authenticated.",
-                "details": f"Seems like you are not logged in, please login by going to http://{localip}:8000/login",
-            },
-            status_code=403,
-        )
-
     else:
-        check_session()
-        response = await call_next(request)
-        return response
+        token_check = check_session()
+
+        if token_check == "Not Logged In":
+            return JSONResponse(
+                content={
+                    "status_code": 403,
+                    "error": "Session not authenticated.",
+                    "details": f"Seems like you are not logged in, please login by going to http://{localip}:8000/login",
+                },
+                status_code=403,
+            )
+
+        elif token_check == "Expired":
+            email, password = get_creds()
+
+            jiotv_obj.login(email, password)
+
+            logger.info("[*] Session Refreshed.")
+            response = await call_next(request)
+            return response
+
+        else:
+            response = await call_next(request)
+            return response
 
 
 @app.get("/createToken")
