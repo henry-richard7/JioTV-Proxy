@@ -22,6 +22,9 @@ JioTV proxy developed using Python and FastAPI framework.
 - To run the py file, on a terminal in the root folder and type `python3 main.py` or `python main.py`
 - Follow the above steps.
 
+# Known Issues
+- CN HD+ Tamil: It is noted that Cartoon Network HD+ Tamil channel does not work under API v2.0 but working in v2.1. Using v2.1 breaks other channels. Need to find a way to use v2.1 endpoint if currently playing channel is CN HD+ Tamil. 
+
 # Auto Build
 
 This repo uses github actions to build binary for x86_64.
