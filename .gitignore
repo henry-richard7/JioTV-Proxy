@@ -13,3 +13,4 @@
 static/.DS_Store
 creds.db
 data/jio_headers.json
+Modules/__pycache__/utils.cpython-310.pyc

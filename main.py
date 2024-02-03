@@ -19,28 +19,29 @@ logger = logging.getLogger("uvicorn")
 jiotv_obj = JioTV()
 localip = jiotv_obj.get_local_ip()
 
+
 def convert(m3u_file: str):
-  m3u_json = []
-  lines = m3u_file.split("\n")
-  for line in lines:
-         if line.startswith("#EXTINF"):
-          channelInfo = {}
-          logoStartIndex = line.index("tvg-logo=\"") + 10
-          logoEndIndex = line.index("\"", logoStartIndex)
-          logoUrl = line[logoStartIndex:logoEndIndex]
-          groupTitleStartIndex = line.index("group-title=\"") + 13
-          groupTitleEndIndex = line.index("\"", groupTitleStartIndex)
-          groupTitle = line[groupTitleStartIndex:groupTitleEndIndex]
-          titleStartIndex = line.rindex(",") + 1
-          title = line[titleStartIndex:].strip()
-          link = lines[lines.index(line) + 1]
-          channelInfo["logo"] = logoUrl
-          channelInfo["group_title"] = groupTitle
-          channelInfo["title"] = title
-          channelInfo["link"] = link
-          m3u_json.append(channelInfo)
-  result = m3u_json
-  return result
+    m3u_json = []
+    lines = m3u_file.split("\n")
+    for line in lines:
+        if line.startswith("#EXTINF"):
+            channelInfo = {}
+            logoStartIndex = line.index('tvg-logo="') + 10
+            logoEndIndex = line.index('"', logoStartIndex)
+            logoUrl = line[logoStartIndex:logoEndIndex]
+            groupTitleStartIndex = line.index('group-title="') + 13
+            groupTitleEndIndex = line.index('"', groupTitleStartIndex)
+            groupTitle = line[groupTitleStartIndex:groupTitleEndIndex]
+            titleStartIndex = line.rindex(",") + 1
+            title = line[titleStartIndex:].strip()
+            link = lines[lines.index(line) + 1]
+            channelInfo["logo"] = logoUrl
+            channelInfo["group_title"] = groupTitle
+            channelInfo["title"] = title
+            channelInfo["link"] = link
+            m3u_json.append(channelInfo)
+    result = m3u_json
+    return result
 
 
 def store_creds(email, password, expire_time):
@@ -170,17 +171,23 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 async def index(request: Request):
-    channels = json.load(open("data/playlists.json"))
+    playlist_response = await jiotv_obj.get_playlists(request.headers.get("host"))
+    channels = convert(playlist_response)
+
     return templates.TemplateResponse(
-        "index.html", {"request": request, "channels": channels}
+        "index.html", {"request": request, "channels": channels, "search": False}
     )
 
+
 @app.get("/search")
-async def index(query,request: Request):
+async def index(query, request: Request):
     playlist_response = await jiotv_obj.get_playlists(request.headers.get("host"))
     playlist_json = convert(playlist_response)
 
-    return [x for x in playlist_json if query.lower() in x['title'].lower()]
+    channels = [x for x in playlist_json if query.lower() in x["title"].lower()]
+    return templates.TemplateResponse(
+        "index.html", {"request": request, "channels": channels, "search": True}
+    )
 
 
 @app.get("/player")
