@@ -34,12 +34,12 @@
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav">
             <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="#"
+              <a class="nav-link active" aria-current="page" href="/"
                 >TV Channels</a
               >
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Login</a>
+              <a class="nav-link" href="/login">Login</a>
             </li>
           </ul>
         </div>
@@ -47,7 +47,7 @@
     </nav>
 
     <div class="container mb-3 pt-3">
-      <form action="search" method="get" target="">
+      <form action="/" method="get" target="">
         <div class="input-group mb-3">
           <input
             type="text"
@@ -56,6 +56,7 @@
             aria-label="Channel Name"
             aria-describedby="button-addon2"
             name="query"
+            required
           />
           <button
             class="btn btn-outline-secondary"
@@ -66,11 +67,17 @@
           </button>
         </div>
       </form>
-      {% if search%}
-      <a type="button" class="btn btn-outline-success" href="/">Show all</a>
-      {% endif %}
+    </div>
+    {% if channels|length == 0 %}
+
+    <div class="container">
+      <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">No Results Found!</h4>
+        <p>No TV channels found for <b>{{query}}</b>!.</p>
+      </div>
     </div>
 
+    {% endif %}
     <div class="row row-cols-5 row-cols-md-5 g-4 p-3 mx-auto">
       {% for channel in channels %}
       <div class="col">
@@ -88,6 +95,13 @@
         </div>
       </div>
       {% endfor %}
+    </div>
+    <div class="container text-center mb-2">
+      {% if search%}
+      <a type="button" class="btn btn-outline-success btn-lg" href="/"
+        >Show all</a
+      >
+      {% endif %}
     </div>
   </body>
 </html>

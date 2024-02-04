@@ -1,6 +1,8 @@
 import uvicorn
 import json
 
+from typing import Optional
+
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse, Response, JSONResponse
 
@@ -170,23 +172,18 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/")
-async def index(request: Request):
+async def index(request: Request, query: Optional[str] = None):
     playlist_response = await jiotv_obj.get_playlists(request.headers.get("host"))
     channels = convert(playlist_response)
+    search = False
+
+    if query != "" and query is not None:
+        channels = [x for x in channels if query.lower() in x["title"].lower()]
+        search = True
 
     return templates.TemplateResponse(
-        "index.html", {"request": request, "channels": channels, "search": False}
-    )
-
-
-@app.get("/search")
-async def index(query, request: Request):
-    playlist_response = await jiotv_obj.get_playlists(request.headers.get("host"))
-    playlist_json = convert(playlist_response)
-
-    channels = [x for x in playlist_json if query.lower() in x["title"].lower()]
-    return templates.TemplateResponse(
-        "index.html", {"request": request, "channels": channels, "search": True}
+        "index.html",
+        {"request": request, "channels": channels, "search": search, "query": query},
     )
 
 
