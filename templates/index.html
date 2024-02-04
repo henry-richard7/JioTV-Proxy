@@ -97,7 +97,7 @@
       {% endfor %}
     </div>
     <div class="container text-center mb-2">
-      {% if search%}
+      {% if search and query.strip()%}
       <a type="button" class="btn btn-outline-success btn-lg" href="/"
         >Show all</a
       >
