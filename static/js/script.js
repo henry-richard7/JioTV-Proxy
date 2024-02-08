@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const channel_id = document.getElementById('channel_id').value;
-  const source = '/m3u8?cid='+channel_id;
+  const source = document.getElementById('stream_url').value;
   const video = document.querySelector('video');
 
   const defaultOptions = {};

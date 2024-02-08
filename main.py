@@ -188,8 +188,10 @@ async def index(request: Request, query: Optional[str] = None):
 
 
 @app.get("/player")
-async def player(request: Request, cid):
-    return templates.TemplateResponse("player.html", {"request": request, "cid": cid})
+async def player(request: Request, stream_url):
+    return templates.TemplateResponse(
+        "player.html", {"request": request, "stream_url": stream_url}
+    )
 
 
 @app.middleware("http")

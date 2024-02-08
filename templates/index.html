@@ -87,7 +87,7 @@
             <h5 class="card-title">{{ channel.title }}</h5>
             <a
               class="btn btn-primary"
-              href="/player?{{ channel.link.split('?')[-1] }}"
+              href="/player?stream_url={{ channel.link }}"
               role="button"
               >Watch Live Now</a
             >
