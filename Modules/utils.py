@@ -99,8 +99,6 @@ class JioTV:
             json.dump(response, f, ensure_ascii=False, indent=4)
 
     def sendOTP(mobile):
-        if "+91" not in mobile:
-            mobile = "+91" + mobile
         body = {
             "identifier": mobile,
             "otpIdentifier": mobile,
