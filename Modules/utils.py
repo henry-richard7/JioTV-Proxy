@@ -98,6 +98,24 @@ class JioTV:
         with open(r"data\channels.json", "w") as f:
             json.dump(response, f, ensure_ascii=False, indent=4)
 
+    def sendOTP(mobile):
+        if "+91" not in mobile:
+            mobile = "+91" + mobile
+        body = {
+            "identifier": mobile,
+            "otpIdentifier": mobile,
+            "action": "otpbasedauthn",
+        }
+        resp = httpx.post(
+            "https://api.jio.com/v3/dip/user/otp/send",
+            json=body,
+            headers={"x-api-key": "l7xx75e822925f184370b2e25170c5d5820a"},
+        )
+        if resp.status_code != 204:
+            return "[FAILED]"
+        else:
+            return "[SUCCESS]"
+
     def login(self, email, password):
         """
         Logs in a user with the given email and password.

@@ -46,7 +46,7 @@ def convert(m3u_file: str):
     return result
 
 
-def store_creds(email, password, expire_time):
+def store_creds(email, password, expire_time, mode="email_pass"):
     # Store the credentials along with expire time in sqlite
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
@@ -54,11 +54,12 @@ def store_creds(email, password, expire_time):
         """CREATE TABLE IF NOT EXISTS creds(
         email TEXT,
         password TEXT,
+        mode TEXT,
         expire NUMERIC
     )"""
     )
     cursor.execute(
-        """INSERT INTO creds VALUES(?,?,?)""", (email, password, expire_time)
+        """INSERT INTO creds VALUES(?,?,?,?)""", (email, password, mode, expire_time)
     )
     db.commit()
     db.close()
