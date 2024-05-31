@@ -108,20 +108,6 @@ def get_creds():
     return creds_
 
 
-def create_creds():
-    db = sqlite3.connect("creds.db")
-    cursor = db.cursor()
-    cursor.execute(
-        """CREATE TABLE IF NOT EXISTS creds(
-        email TEXT,
-        password TEXT,
-        expire NUMERIC
-    )"""
-    )
-    db.commit()
-    db.close()
-
-
 def check_session():
     """
     Check if the user is logged in and if the session has expired.
