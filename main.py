@@ -147,7 +147,10 @@ def welcome_msg():
     print("===================================================")
     print("Welcome to JioTV-Proxy")
     print(f"Web Player: http://{localip}:8000/")
-    print(f"Please Login at http://{localip}:8000/login")
+    print(
+        f"Please Login Using Email and Password at http://{localip}:8000/login?mode=unpw"
+    )
+    print(f"Please Login Using OTP at http://{localip}:8000/login?mode=otp")
     print(f"Playlist m3u: http://{localip}:8000/playlist.m3u")
     print("===================================================")
     print()
@@ -193,7 +196,7 @@ async def middleware(request: Request, call_next):
     Returns:
         - Response: The HTTP response object to be sent back to the client.
     """
-    if request.url.path in ["/login", "/playlist.m3u", "/createToken"]:
+    if request.url.path in ["/login", "/playlist.m3u", "/createToken", "/get_otp"]:
         response = await call_next(request)
         return response
 
@@ -213,7 +216,7 @@ async def middleware(request: Request, call_next):
         elif token_check == "Expired":
             email, password, login_mode = get_creds()
 
-            if login_mode == "":
+            if login_mode == "unpw":
                 jiotv_obj.login(email, password)
                 update_expire_time(email=email, password=password)
                 jiotv_obj.update_headers()
@@ -234,6 +237,11 @@ async def middleware(request: Request, call_next):
         else:
             response = await call_next(request)
             return response
+
+
+@app.get("/get_otp")
+def get_otp(phone_no):
+    return jiotv_obj.sendOTP(phone_no)
 
 
 @app.get("/createToken")
@@ -266,7 +274,7 @@ def createToken(email, password, mode):
 
 
 @app.get("/login")
-async def loginJio(request: Request):
+async def loginJio(request: Request, mode: str):
     """
     Get the login page.
 
@@ -276,7 +284,10 @@ async def loginJio(request: Request):
     Returns:
         TemplateResponse: The response containing the login page HTML template.
     """
-    return templates.TemplateResponse("login.html", {"request": request})
+    if mode == "unpw":
+        return templates.TemplateResponse("login.html", {"request": request})
+    elif mode == "otp":
+        return templates.TemplateResponse("otp_login.html", {"request": request})
 
 
 @app.get("/playlist.m3u")

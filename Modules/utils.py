@@ -98,7 +98,7 @@ class JioTV:
         with open(r"data\channels.json", "w") as f:
             json.dump(response, f, ensure_ascii=False, indent=4)
 
-    def sendOTP(mobile):
+    def sendOTP(self, mobile):
         body = {
             "identifier": mobile,
             "otpIdentifier": mobile,
@@ -127,7 +127,7 @@ class JioTV:
         """
         body = {
             "identifier": email,
-            "password": password,
+            "password" if mode == "unpw" else "otp": password,
             "rememberUser": "T",
             "upgradeAuth": "Y",
             "returnSessionDetails": "T",
