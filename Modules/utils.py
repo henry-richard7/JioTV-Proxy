@@ -114,7 +114,7 @@ class JioTV:
         else:
             return "[SUCCESS]"
 
-    def login(self, email, password):
+    def login(self, email, password, mode="unpw"):
         """
         Logs in a user with the given email and password.
 
@@ -142,7 +142,7 @@ class JioTV:
         }
 
         resp = httpx.post(
-            "https://api.jio.com/v3/dip/user/unpw/verify",
+            f"https://api.jio.com/v3/dip/user/{mode}/verify",
             json=body,
             headers={
                 "User-Agent": "JioTV",

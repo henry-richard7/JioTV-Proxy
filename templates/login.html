@@ -131,7 +131,7 @@
             setTimeout(
                 function () {
                     $.ajax({
-                        url: '/createToken?email=' + email + '&password=' + passsword,
+                        url: '/createToken?email=' + email + '&password=' + passsword+ '&mode=unpw',
                         type: 'GET',
                         async: true,
                         success: function (result) {

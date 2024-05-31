@@ -46,7 +46,7 @@ def convert(m3u_file: str):
     return result
 
 
-def store_creds(email, password, expire_time, mode="email_pass"):
+def store_creds(email, password, expire_time, mode="unpw"):
     # Store the credentials along with expire time in sqlite
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
@@ -103,7 +103,7 @@ def clear_creds():
 def get_creds():
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
-    cursor.execute("""SELECT email,password FROM creds""")
+    cursor.execute("""SELECT email,password,mode FROM creds""")
     creds_ = cursor.fetchone()
     db.close()
     return creds_
@@ -211,15 +211,25 @@ async def middleware(request: Request, call_next):
             )
 
         elif token_check == "Expired":
-            email, password = get_creds()
+            email, password, login_mode = get_creds()
 
-            jiotv_obj.login(email, password)
-            update_expire_time(email=email, password=password)
-            jiotv_obj.update_headers()
+            if login_mode == "":
+                jiotv_obj.login(email, password)
+                update_expire_time(email=email, password=password)
+                jiotv_obj.update_headers()
 
-            logger.info("[*] Session Refreshed.")
-            response = await call_next(request)
-            return response
+                logger.info("[*] Session Refreshed.")
+                response = await call_next(request)
+                return response
+            else:
+                return JSONResponse(
+                    content={
+                        "status_code": 403,
+                        "error": "Session Expired.",
+                        "details": f"Session has been expired. Please try logging in again.",
+                    },
+                    status_code=403,
+                )
 
         else:
             response = await call_next(request)
@@ -227,13 +237,14 @@ async def middleware(request: Request, call_next):
 
 
 @app.get("/createToken")
-def createToken(email, password):
+def createToken(email, password, mode):
     """
     A function that creates a token for the given email and password.
 
     Parameters:
         email (str): The email of the user.
         password (str): The password of the user.
+        mode (str): The mode of login (unpw or otp)
 
     Returns:
         str: The login response containing the token.
@@ -245,9 +256,9 @@ def createToken(email, password):
     else:
         logger.info("[-] First Time Logging in.")
 
-    login_response = jiotv_obj.login(email, password)
+    login_response = jiotv_obj.login(email, password, mode)
     if login_response == "[SUCCESS]":
-        store_creds(email, password, time() + 432000)
+        store_creds(email, password, time() + 432000, mode)
         jiotv_obj.update_headers()
         return login_response
 
