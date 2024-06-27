@@ -3,6 +3,7 @@
 JioTV proxy developed using Python and FastAPI framework.
 
 # Total Downloads
+
 ![Downloads](https://img.shields.io/github/downloads/henry-richard7/JioTV-Proxy/total.svg?style=for-the-badge&logo=github)
 
 # New Changes
@@ -20,6 +21,13 @@ JioTV proxy developed using Python and FastAPI framework.
 - To play live channels on web http://localhost:8000.
 - To play live channels in media player such as vlc http://localhost:8000/playlist.m3u
 - To play live channels on your local network http://<your_local_ip>:8000/playlist.m3u (You can get this from console when running the app.)
+
+# How To Use (Using Docker)
+
+- Clone or Download this repo.
+- In terminal `cd JioTV-Proxy`
+- Next type `docker build -t jiotv-proxy .` and press enter and wait for build.
+- Next type `docker run -p 8000:8000 jiotv-proxy` and press enter.
 
 # How To Use (From Source)
 

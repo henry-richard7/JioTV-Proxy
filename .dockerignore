@@ -5,6 +5,7 @@
 !.vscode/extensions.json
 !.vscode/*.code-snippets
 
+.github
 # Local History for Visual Studio Code
 .history/
 
@@ -15,3 +16,5 @@ creds.db
 data/jio_headers.json
 Modules/__pycache__/
 __pycache__
+LICENSE
+README.md
