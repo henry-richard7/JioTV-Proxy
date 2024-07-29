@@ -40,6 +40,7 @@ JioTV proxy developed using Python and FastAPI framework.
 
 - CN HD+ Tamil: It is noted that Cartoon Network HD+ Tamil channel does not work under API v2.0 but working in v2.1. Using v2.1 breaks other channels. Need to find a way to use v2.1 endpoint if currently playing channel is CN HD+ Tamil.
 - Sony channels are not playing in Web Browser. This is due to **CORS**. To workaround Need to install [Cors Bypass Extension](https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino?pli=1)
+- Internal Server Error 500: Jio has changed API requests,  I am not planning to fix this as I don't have free time (Will fix when I have time, I don't have any ETA). Please follow this repo https://github.com/rabilrbl/jiotv_go its actively maintained by [@rabilrbl](https://github.com/rabilrbl).
 
 # Auto Build
 
