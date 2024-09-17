@@ -96,7 +96,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.get_release_info.outputs.GITHUB_ENV }}
+          upload_url: ${{ env.UPLOAD_URL }}
           asset_path: ./dist/${{ matrix.OUT_FILE_NAME}}
           asset_name: ${{ matrix.OUT_FILE_NAME}}
           asset_content_type: ${{ matrix.ASSET_MIME}}
