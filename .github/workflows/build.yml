@@ -8,7 +8,7 @@ on:
 jobs:
   createrelease:
     name: Create Release
-    runs-on: [ubuntu-latest]
+    runs-on: ubuntu-latest
     steps:
       - name: Create Release
         id: create_release
@@ -37,7 +37,7 @@ jobs:
         include:
           - os: macos-latest
             TARGET: macos
-            CMD_BUILD: >
+            CMD_BUILD: |
               pyinstaller --onefile --console -n JioTV -i resources/JioTV_logo.icns main.py &&
               cp -r templates dist &&
               cp -r data dist &&
@@ -48,7 +48,7 @@ jobs:
             ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows
-            CMD_BUILD: >
+            CMD_BUILD: |
               pyinstaller --onefile --console -n JioTV  -i resources\JioTV_logo.ico main.py &&
               cp -r templates dist &&
               cp -r data dist &&
@@ -59,7 +59,7 @@ jobs:
             ASSET_MIME: application/zip
           - os: ubuntu-latest
             TARGET: linux
-            CMD_BUILD: >
+            CMD_BUILD: |
               pyinstaller --onefile --console -n JioTV main.py &&
               cp -r templates dist &&
               cp -r data dist &&
@@ -68,6 +68,7 @@ jobs:
               zip -r9 JioTV_auto_build_LINUX_x86_64 .
             OUT_FILE_NAME: JioTV_auto_build_LINUX_x86_64.zip
             ASSET_MIME: application/zip
+
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python 3.8
@@ -78,25 +79,24 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Build with pyinstaller for ${{matrix.TARGET}}
-        run: ${{matrix.CMD_BUILD}}
+      - name: Build with pyinstaller for ${{ matrix.TARGET }}
+        run: ${{ matrix.CMD_BUILD }}
       - name: Load Release URL File from release job
         uses: actions/download-artifact@v4
         with:
           name: release_url
       - name: Get Release File Name & Upload URL
         id: get_release_info
-        shell: bash
         run: |
-          value=`cat release_url/release_url.txt`
-          echo ::set-output name=upload_url::$value
+          value=$(cat release_url.txt)
+          echo "UPLOAD_URL=$value" >> $GITHUB_ENV
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.get_release_info.outputs.upload_url }}
-          asset_path: ./dist/${{ matrix.OUT_FILE_NAME}}
-          asset_name: ${{ matrix.OUT_FILE_NAME}}
-          asset_content_type: ${{ matrix.ASSET_MIME}}
+          upload_url: ${{ env.UPLOAD_URL }}
+          asset_path: ./dist/${{ matrix.OUT_FILE_NAME }}
+          asset_name: ${{ matrix.OUT_FILE_NAME }}
+          asset_content_type: ${{ matrix.ASSET_MIME }}
