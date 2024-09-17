@@ -1,5 +1,6 @@
 import uvicorn
 import json
+import multiprocessing
 
 from typing import Optional
 
@@ -18,7 +19,7 @@ import sqlite3
 import logging
 
 logger = logging.getLogger("uvicorn")
-jiotv_obj = JioTV()
+jiotv_obj = JioTV(logger)
 localip = jiotv_obj.get_local_ip()
 
 
@@ -65,7 +66,7 @@ def store_creds(email, password, expire_time):
 
 
 def update_expire_time(email, password):
-    expire_time = time() + 432000
+    expire_time = time() + (1 * 60 * 60) + (30 * 60)
 
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
@@ -143,12 +144,10 @@ def check_session():
 
 
 def welcome_msg():
-    print("===================================================")
     print("Welcome to JioTV-Proxy")
     print(f"Web Player: http://{localip}:8000/")
     print(f"Please Login at http://{localip}:8000/login")
     print(f"Playlist m3u: http://{localip}:8000/playlist.m3u")
-    print("===================================================")
     print()
 
 
@@ -400,5 +399,8 @@ async def play(uri, cid, cookie):
 
 
 if __name__ == "__main__":
+    # This is required for windows.
+    multiprocessing.freeze_support()
+
     welcome_msg()
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="warning")

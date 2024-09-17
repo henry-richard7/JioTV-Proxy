@@ -9,6 +9,8 @@ import httpx
 from os import path
 from base64 import b64encode
 
+from logging import Logger
+
 # Constants
 IMG_PUBLIC = "https://jioimages.cdn.jio.com/imagespublic/"
 IMG_CATCHUP = "https://jiotv.catchup.cdn.jio.com/dare_images/images/"
@@ -34,7 +36,8 @@ android_id = hashlib.sha1(f"{time.time()}{random.randint(0, 99)}".encode()).hexd
 
 
 class JioTV:
-    def __init__(self) -> None:
+    def __init__(self, logger: Logger) -> None:
+        self.logger = logger
         self.channel_headers = {}
         self.request_headers = {}
 
@@ -562,7 +565,7 @@ class JioTV:
             19: "JioDarshan",
         }
 
-        m3u8 = """#EXTM3U"""
+        m3u8 = """#EXTM3U\n"""
 
         for channel in channels:
             channel_id = channel["channel_id"]
@@ -572,11 +575,6 @@ class JioTV:
             )
             channel_name = channel["channel_name"]
             channel_genre = genre_id[channel["channelCategoryId"]]
-
-            # if (
-            #     "sony" not in channel_logo.lower()
-            #     and "sony" not in channel["channel_name"].lower()
-            # ):
             m3u8 += f'#EXTINF:-1 tvg-id="{channel_id}" group-title="{channel_genre}" tvg-logo="{channel_logo}",{channel_name}\nhttp://{host}/m3u8?cid={channel_id}\n'
 
         return m3u8.strip()
