@@ -46,7 +46,7 @@ def convert(m3u_file: str):
     return result
 
 
-def store_creds(email, password, expire_time, mode="unpw"):
+def store_creds(email, password, expire_time):
     # Store the credentials along with expire time in sqlite
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
@@ -54,12 +54,11 @@ def store_creds(email, password, expire_time, mode="unpw"):
         """CREATE TABLE IF NOT EXISTS creds(
         email TEXT,
         password TEXT,
-        mode TEXT,
         expire NUMERIC
     )"""
     )
     cursor.execute(
-        """INSERT INTO creds VALUES(?,?,?,?)""", (email, password, mode, expire_time)
+        """INSERT INTO creds VALUES(?,?,?)""", (email, password, expire_time)
     )
     db.commit()
     db.close()
@@ -103,7 +102,7 @@ def clear_creds():
 def get_creds():
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
-    cursor.execute("""SELECT email,password,mode FROM creds""")
+    cursor.execute("""SELECT email,password FROM creds""")
     creds_ = cursor.fetchone()
     db.close()
     return creds_
@@ -147,10 +146,7 @@ def welcome_msg():
     print("===================================================")
     print("Welcome to JioTV-Proxy")
     print(f"Web Player: http://{localip}:8000/")
-    print(
-        f"Please Login Using Email and Password at http://{localip}:8000/login?mode=unpw"
-    )
-    print(f"Please Login Using OTP at http://{localip}:8000/login?mode=otp")
+    print(f"Please Login at http://{localip}:8000/login")
     print(f"Playlist m3u: http://{localip}:8000/playlist.m3u")
     print("===================================================")
     print()
@@ -214,13 +210,9 @@ async def middleware(request: Request, call_next):
             )
 
         elif token_check == "Expired":
-            email, password, login_mode = get_creds()
 
-            if login_mode == "unpw":
-                jiotv_obj.login(email, password)
-                update_expire_time(email=email, password=password)
+            if jiotv_obj.refresh_token():
                 jiotv_obj.update_headers()
-
                 logger.info("[*] Session Refreshed.")
                 response = await call_next(request)
                 return response
@@ -241,18 +233,18 @@ async def middleware(request: Request, call_next):
 
 @app.get("/get_otp")
 def get_otp(phone_no):
-    return jiotv_obj.sendOTP(phone_no)
+    return jiotv_obj.sendOTP(phone_no.replace("+91", ""))
 
 
 @app.get("/createToken")
-def createToken(email, password, mode):
+def createToken(email, password):
+    email = email.replace("+91", "")
     """
     A function that creates a token for the given email and password.
 
     Parameters:
         email (str): The email of the user.
         password (str): The password of the user.
-        mode (str): The mode of login (unpw or otp)
 
     Returns:
         str: The login response containing the token.
@@ -264,9 +256,9 @@ def createToken(email, password, mode):
     else:
         logger.info("[-] First Time Logging in.")
 
-    login_response = jiotv_obj.login(email, password, mode)
+    login_response = jiotv_obj.login(email, password)
     if login_response == "[SUCCESS]":
-        store_creds(email, password, time() + 432000, mode)
+        store_creds(email, password, time() + 432000)
         jiotv_obj.update_headers()
         return login_response
 
@@ -274,7 +266,7 @@ def createToken(email, password, mode):
 
 
 @app.get("/login")
-async def loginJio(request: Request, mode: str):
+async def loginJio(request: Request):
     """
     Get the login page.
 
@@ -284,10 +276,7 @@ async def loginJio(request: Request, mode: str):
     Returns:
         TemplateResponse: The response containing the login page HTML template.
     """
-    if mode == "unpw":
-        return templates.TemplateResponse("login.html", {"request": request})
-    elif mode == "otp":
-        return templates.TemplateResponse("otp_login.html", {"request": request})
+    return templates.TemplateResponse("otp_login.html", {"request": request})
 
 
 @app.get("/playlist.m3u")

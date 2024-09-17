@@ -1,10 +1,13 @@
-from uuid import uuid4
+import hashlib
+import time
+import random
+
 import m3u8
 import socket
 import json
 import httpx
 from os import path
-
+from base64 import b64encode
 
 # Constants
 IMG_PUBLIC = "https://jioimages.cdn.jio.com/imagespublic/"
@@ -14,46 +17,108 @@ FEATURED_SRC = (
     "https://tv.media.jio.com/apis/v1.6/getdata/featurednew?start=0&limit=30&langId=6"
 )
 CHANNELS_SRC_NEW = "https://jiotv.data.cdn.jio.com/apis/v1.4/getMobileChannelList/get/?langId=6&os=android&devicetype=phone&usertype=tvYR7NSNn7rymo3F&version=285"
-GET_CHANNEL_URL = "https://tv.media.jio.com/apis/v2.0/getchannelurl/getchannelurl?langId=6&userLanguages=All"
+GET_CHANNEL_URL = "https://jiotvapi.media.jio.com/playback/apis/v1/geturl?langId=6"
 CATCHUP_SRC = "https://jiotv.data.cdn.jio.com/apis/v1.3/getepg/get?offset={0}&channel_id={1}&langId=6"
 M3U_CHANNEL = '\n#EXTINF:0 tvg-id="{tvg_id}" tvg-name="{channel_name}" group-title="{group_title}" tvg-chno="{tvg_chno}" tvg-logo="{tvg_logo}"{catchup},{channel_name}\n{play_url}'
 DICTIONARY_URL = "https://jiotvapi.cdn.jio.com/apis/v1.3/dictionary/dictionary?langId=6"
+
+REFRESH_TOKEN_URL = (
+    "https://auth.media.jio.com/tokenservice/apis/v1/refreshtoken?langId=6"
+)
 # ---------------------
+
+
+android_id = hashlib.sha1(f"{time.time()}{random.randint(0, 99)}".encode()).hexdigest()[
+    :16
+]
 
 
 class JioTV:
     def __init__(self) -> None:
-        self.auth_headers = {}
         self.channel_headers = {}
+        self.request_headers = {}
 
         if path.exists(path.join("data", "jio_headers.json")):
-            self.auth_headers = json.load(
-                open(path.join("data", "jio_headers.json"), "r")
-            )
-            self.channel_headers = {
-                "ssotoken": self.auth_headers["ssotoken"],
-                "userId": self.auth_headers["userid"],
-                "uniqueId": self.auth_headers["uniqueid"],
-                "crmid": self.auth_headers["crmid"],
-                "user-agent": "plaYtv/7.0.8 (Linux;Android 9) ExoPlayerLib/2.11.7",
-                "deviceid": self.auth_headers["deviceId"],
+            auth_headers = json.load(open(path.join("data", "jio_headers.json"), "r"))
+            self.request_headers = {
+                "appkey": "NzNiMDhlYcQyNjJm",
+                "channel_id": "144",
+                "channelid": "144",
+                "crmid": auth_headers["crmid"],
+                "deviceId": auth_headers["device_id"],
                 "devicetype": "phone",
+                "isott": "true",
+                "languageId": "6",
+                "lbcookie": "1",
                 "os": "android",
-                "osversion": "9",
+                "osVersion": "14",
+                "srno": "240707144000",
+                "ssotoken": auth_headers["ssotoken"],
+                "subscriberId": auth_headers["subscriberid"],
+                "uniqueId": auth_headers["uniqueid"],
+                "appname": "RJIL_JioTV",
+                "User-Agent": "plaYtv/7.1.3 (Linux;Android 14) ExoPlayerLib/2.11.7",
+                "usergroup": "tvYR7NSNn7rymo3F",
+                "versionCode": "331",
+            }
+            self.channel_headers = {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "appkey": "NzNiMDhlYzQyNjJm",
+                "userid": auth_headers["userid"],
+                "crmid": auth_headers["crmid"],
+                "deviceId": auth_headers["device_id"],
+                "devicetype": "phone",
+                "isott": "true",
+                "languageId": "6",
+                "lbcookie": "1",
+                "os": "android",
+                "dm": "Xiaomi 22101316UP",
+                "osversion": "14",
+                "srno": "240303144000",
+                "accesstoken": auth_headers["accesstoken"],
+                "subscriberid": auth_headers["subscriberid"],
+                "uniqueId": auth_headers["uniqueid"],
+                "usergroup": "tvYR7NSNn7rymo3F",
+                "User-Agent": "okhttp/4.9.3",
+                "versionCode": "331",
             }
 
     def update_headers(self):
-        self.auth_headers = json.load(open(path.join("data", "jio_headers.json"), "r"))
+        auth_headers = json.load(open(path.join("data", "jio_headers.json"), "r"))
+
+        self.request_headers = {
+            "appkey": "NzNiMDhlYcQyNjJm",
+            "channel_id": "144",
+            "channelid": "144",
+            "crmid": auth_headers["crmid"],
+            "deviceId": auth_headers["device_id"],
+            "devicetype": "phone",
+            "isott": "true",
+            "languageId": "6",
+            "lbcookie": "1",
+            "os": "android",
+            "osVersion": "14",
+            "srno": "240707144000",
+            "ssotoken": auth_headers["ssotoken"],
+            "subscriberId": auth_headers["subscriberid"],
+            "uniqueId": auth_headers["uniqueid"],
+            "appname": "RJIL_JioTV",
+            "User-Agent": "plaYtv/7.1.3 (Linux;Android 14) ExoPlayerLib/2.11.7",
+            "usergroup": "tvYR7NSNn7rymo3F",
+            "versionCode": "331",
+        }
+
         self.channel_headers = {
-            "ssotoken": self.auth_headers["ssotoken"],
-            "userId": self.auth_headers["userid"],
-            "uniqueId": self.auth_headers["uniqueid"],
-            "crmid": self.auth_headers["crmid"],
+            "ssotoken": auth_headers["ssotoken"],
+            "userId": auth_headers["userid"],
+            "uniqueId": auth_headers["uniqueid"],
+            "crmid": auth_headers["crmid"],
             "user-agent": "plaYtv/7.0.8 (Linux;Android 9) ExoPlayerLib/2.11.7",
-            "deviceid": self.auth_headers["deviceId"],
+            "deviceid": auth_headers["deviceId"],
             "devicetype": "phone",
             "os": "android",
             "osversion": "9",
+            "appkey": "NzNiMDhlYcQyNjJm",
         }
 
     def get_local_ip(self):
@@ -99,22 +164,32 @@ class JioTV:
             json.dump(response, f, ensure_ascii=False, indent=4)
 
     def sendOTP(self, mobile):
-        body = {
-            "identifier": mobile,
-            "otpIdentifier": mobile,
-            "action": "otpbasedauthn",
-        }
-        resp = httpx.post(
-            "https://api.jio.com/v3/dip/user/otp/send",
-            json=body,
-            headers={"x-api-key": "l7xx75e822925f184370b2e25170c5d5820a"},
+
+        base64_encoded_phone_number = b64encode(f"+91{mobile}".encode("ascii")).decode(
+            "ascii"
         )
-        if resp.status_code != 204:
-            return "[FAILED]"
-        else:
+
+        url = "https://jiotvapi.media.jio.com/userservice/apis/v1/loginotp/send"
+        json_body = {
+            "number": base64_encoded_phone_number,
+        }
+        headers = {
+            "appname": "RJIL_JioTV",
+            "os": "android",
+            "devicetype": "phone",
+            "content-type": "application/json",
+            "user-agent": "okhttp/3.14.9",
+        }
+
+        resp = httpx.post(url=url, json=json_body, headers=headers)
+
+        if resp.status_code == 204:
             return "[SUCCESS]"
 
-    def login(self, email, password, mode="unpw"):
+        else:
+            return "[FAILED]"
+
+    def login(self, phone_number, otp):
         """
         Logs in a user with the given email and password.
 
@@ -125,37 +200,41 @@ class JioTV:
         Returns:
             str: The success or failure message.
         """
-        body = {
-            "identifier": email,
-            "password" if mode == "unpw" else "otp": password,
-            "rememberUser": "T",
-            "upgradeAuth": "Y",
-            "returnSessionDetails": "T",
+
+        base64_encoded_phone_number = b64encode(
+            f"+91{phone_number}".encode("ascii")
+        ).decode("ascii")
+
+        url = "https://jiotvapi.media.jio.com/userservice/apis/v1/loginotp/verify"
+        headers = {
+            "appname": "RJIL_JioTV",
+            "os": "android",
+            "devicetype": "phone",
+            "content-type": "application/json",
+            "user-agent": "okhttp/3.14.9",
+        }
+
+        json_body = {
+            "number": base64_encoded_phone_number,
+            "otp": otp,
             "deviceInfo": {
-                "consumptionDeviceName": "ZUK Z1",
+                "consumptionDeviceName": "RMX1945",
                 "info": {
                     "type": "android",
-                    "platform": {"name": "ham", "version": "8.0.0"},
-                    "androidId": str(uuid4()),
+                    "platform": {"name": "RMX1945"},
+                    "androidId": android_id,
                 },
             },
         }
 
-        resp = httpx.post(
-            f"https://api.jio.com/v3/dip/user/{mode}/verify",
-            json=body,
-            headers={
-                "User-Agent": "JioTV",
-                "x-api-key": "l7xx75e822925f184370b2e25170c5d5820a",
-                "Content-Type": "application/json",
-            },
-        )
-
-        resp = resp.json()
+        resp = httpx.post(url=url, json=json_body, headers=headers).json()
 
         if resp.get("ssoToken", "") != "":
             _CREDS = {
+                "accesstoken": resp.get("authToken"),
+                "refresh_token": resp.get("refreshToken"),
                 "ssotoken": resp.get("ssoToken"),
+                "jToken": resp.get("jToken"),
                 "userid": resp.get("sessionAttributes", {}).get("user", {}).get("uid"),
                 "uniqueid": resp.get("sessionAttributes", {})
                 .get("user", {})
@@ -166,10 +245,11 @@ class JioTV:
                 "subscriberid": resp.get("sessionAttributes", {})
                 .get("user", {})
                 .get("subscriberId"),
+                "device_id": resp.get("deviceId"),
             }
 
             headers = {
-                "deviceId": str(uuid4()),
+                "deviceId": resp.get("deviceId"),
                 "devicetype": "phone",
                 "os": "android",
                 "osversion": "9",
@@ -188,6 +268,38 @@ class JioTV:
         else:
             return "[FAILED]"
 
+    def refresh_token(self):
+        auth_headers = json.load(open(path.join("data", "jio_headers.json"), "r"))
+
+        post_body = {
+            "appName": "RJIL_JioTV",
+            "deviceId": auth_headers["deviceId"],
+            "refreshToken": auth_headers["refresh_token"],
+        }
+        refresh_token_headers = {
+            "accesstoken": auth_headers["accesstoken"],
+            "devicetype": "phone",
+            "versionCode": "315",
+            "os": "android",
+            "Content-Type": "application/json; charset=utf-8",
+            "Host": "auth.media.jio.com",
+            "Accept-Encoding": "gzip",
+            "User-Agent": "okhttp/4.2.2",
+        }
+
+        resp = httpx.post(
+            REFRESH_TOKEN_URL, headers=refresh_token_headers, json=post_body
+        ).json()
+
+        if resp.get("authToken"):
+            auth_headers["accesstoken"] = resp.get("authToken")
+            with open("data/jio_headers.json", "w") as f:
+                json.dump(auth_headers, f, indent=4)
+
+            return True
+        else:
+            return False
+
     async def get_key(self, uri, cid, cookie):
         """
         Retrieves a key from the specified URI using the provided channel ID and cookie.
@@ -200,14 +312,15 @@ class JioTV:
         Returns:
             bytes: The retrieved key as bytes.
         """
-        headers = self.auth_headers
+        headers = self.request_headers
         headers["channelid"] = str(cid)
-        headers["srno"] = str(uuid4())
+        headers["srno"] = "240707144000"
         headers["cookie"] = cookie
         headers["Content-type"] = "application/octet-stream"
 
         resp = await httpx.AsyncClient().get(uri, headers=headers)
         resp = resp.content
+
         return resp
 
     async def get_ts(self, uri, cid, cookie):
@@ -222,9 +335,9 @@ class JioTV:
         Returns:
             bytes: The response content.
         """
-        headers = self.auth_headers
+        headers = self.request_headers
         headers["channelid"] = str(cid)
-        headers["srno"] = str(uuid4())
+        headers["srno"] = "240707144000"
         headers["cookie"] = cookie
 
         resp = await httpx.AsyncClient().get(uri, headers=headers)
@@ -313,11 +426,10 @@ class JioTV:
         """
         rjson = {"channel_id": int(channel_id), "stream_type": "Seek"}
         resp = await httpx.AsyncClient().post(
-            GET_CHANNEL_URL, headers=self.channel_headers, json=rjson
+            GET_CHANNEL_URL, headers=self.channel_headers, data=rjson
         )
 
         resp = resp.json()
-
         onlyUrl = resp.get("bitrates", "").get("high", "")
 
         base_url = onlyUrl.split("?")[0].split("/")
@@ -325,7 +437,6 @@ class JioTV:
         base_url = "/".join(base_url)
 
         cookie = "__hdnea__" + resp.get("result", "").split("__hdnea__")[-1]
-
         first_m3u8 = await httpx.AsyncClient().get(
             onlyUrl, headers=self.channel_headers
         )
@@ -353,7 +464,6 @@ class JioTV:
                     media.uri,
                     f"/get_audio?uri={base_url}/{media.uri}&cid={channel_id}&cookie={cookie}",
                 )
-
         return final_
 
     async def final_play(self, uri, cid, cookie):
@@ -371,9 +481,9 @@ class JioTV:
         Raises:
             None
         """
-        headers = self.auth_headers
+        headers = self.request_headers
         headers["channelid"] = str(cid)
-        headers["srno"] = str(uuid4())
+        headers["srno"] = "240707144000"
         headers["cookie"] = cookie
 
         resp = await httpx.AsyncClient().get(uri, headers=headers)
