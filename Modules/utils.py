@@ -109,16 +109,25 @@ class JioTV:
         }
 
         self.channel_headers = {
-            "ssotoken": auth_headers["ssotoken"],
-            "userId": auth_headers["userid"],
-            "uniqueId": auth_headers["uniqueid"],
+            "Content-Type": "application/x-www-form-urlencoded",
+            "appkey": "NzNiMDhlYzQyNjJm",
+            "userid": auth_headers["userid"],
             "crmid": auth_headers["crmid"],
-            "user-agent": "plaYtv/7.0.8 (Linux;Android 9) ExoPlayerLib/2.11.7",
-            "deviceid": auth_headers["deviceId"],
+            "deviceId": auth_headers["device_id"],
             "devicetype": "phone",
+            "isott": "true",
+            "languageId": "6",
+            "lbcookie": "1",
             "os": "android",
-            "osversion": "9",
-            "appkey": "NzNiMDhlYcQyNjJm",
+            "dm": "Xiaomi 22101316UP",
+            "osversion": "14",
+            "srno": "240303144000",
+            "accesstoken": auth_headers["accesstoken"],
+            "subscriberid": auth_headers["subscriberid"],
+            "uniqueId": auth_headers["uniqueid"],
+            "usergroup": "tvYR7NSNn7rymo3F",
+            "User-Agent": "okhttp/4.9.3",
+            "versionCode": "331",
         }
 
     def get_local_ip(self):
