@@ -1,5 +1,4 @@
 import uvicorn
-import json
 import multiprocessing
 
 from typing import Optional
@@ -22,6 +21,7 @@ logger = logging.getLogger("uvicorn")
 jiotv_obj = JioTV(logger)
 localip = jiotv_obj.get_local_ip()
 
+TOKEN_EXPIRE_TIME = time() + 3600
 
 def convert(m3u_file: str):
     m3u_json = []
@@ -47,36 +47,34 @@ def convert(m3u_file: str):
     return result
 
 
-def store_creds(email, password, expire_time):
+def store_creds(email, expire_time):
     # Store the credentials along with expire time in sqlite
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS creds(
         email TEXT,
-        password TEXT,
         expire NUMERIC
     )"""
     )
     cursor.execute(
-        """INSERT INTO creds VALUES(?,?,?)""", (email, password, expire_time)
+        """INSERT INTO creds VALUES(?,?)""", (email, expire_time)
     )
     db.commit()
     db.close()
 
 
-def update_expire_time(email, password):
-    expire_time = time() + 3600
+def update_expire_time(email):
+    expire_time = TOKEN_EXPIRE_TIME
 
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
 
     cursor.execute(
-        """UPDATE creds SET expire = ? WHERE email = ? and password = ?""",
+        """UPDATE creds SET expire = ? WHERE email = ?""",
         (
             expire_time,
             email,
-            password,
         ),
     )
     db.commit()
@@ -98,15 +96,6 @@ def clear_creds():
     cursor.execute("""DELETE FROM creds""")
     db.commit()
     db.close()
-
-
-def get_creds():
-    db = sqlite3.connect("creds.db")
-    cursor = db.cursor()
-    cursor.execute("""SELECT email,password FROM creds""")
-    creds_ = cursor.fetchone()
-    db.close()
-    return creds_
 
 
 def check_session():
@@ -213,6 +202,7 @@ async def middleware(request: Request, call_next):
             if jiotv_obj.refresh_token():
                 jiotv_obj.update_headers()
                 logger.info("[*] Session Refreshed.")
+                update_expire_time()
                 response = await call_next(request)
                 return response
             else:
@@ -257,7 +247,7 @@ def createToken(email, password):
 
     login_response = jiotv_obj.login(email, password)
     if login_response == "[SUCCESS]":
-        store_creds(email, password, time() + 432000)
+        store_creds(email, TOKEN_EXPIRE_TIME)
         jiotv_obj.update_headers()
         return login_response
 
