@@ -66,7 +66,7 @@ def store_creds(email, password, expire_time):
 
 
 def update_expire_time(email, password):
-    expire_time = time() + (1 * 60 * 60) + (30 * 60)
+    expire_time = time() + 3600
 
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
