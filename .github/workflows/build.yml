@@ -38,7 +38,7 @@ jobs:
           - os: macos-latest
             TARGET: macos
             CMD_BUILD: >
-              nuitka --onefile main.py --output-dir=dist --remove-output --output-filename=JioTV --macos-app-icon=resources\JioTV_logo.ics main.py &&
+              nuitka --onefile main.py --output-dir=dist --remove-output --output-filename=JioTV --macos-app-icon=resources\JioTV_logo.icns &&
               cp -r templates dist &&
               cp -r data dist &&
               cp -r static dist &&
@@ -50,7 +50,7 @@ jobs:
             uses: ilammy/msvc-dev-cmd@v1.4.1
             TARGET: windows
             CMD_BUILD: >
-              nuitka --onefile main.py --output-dir=dist --remove-output --output-filename=JioTV --windows-icon-from-ico=resources\JioTV_logo.ico main.py &&
+              nuitka --onefile main.py --output-dir=dist --remove-output --output-filename=JioTV --windows-icon-from-ico=resources\JioTV_logo.ico &&
               cp -r templates dist &&
               cp -r data dist &&
               cp -r static dist &&
