@@ -23,6 +23,7 @@ localip = jiotv_obj.get_local_ip()
 
 TOKEN_EXPIRE_TIME = time() + 3600
 
+
 def convert(m3u_file: str):
     m3u_json = []
     lines = m3u_file.split("\n")
@@ -47,8 +48,9 @@ def convert(m3u_file: str):
     return result
 
 
-def store_creds(email, expire_time):
+def store_creds(email):
     # Store the credentials along with expire time in sqlite
+    expire_time = time() + 3600
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
     cursor.execute(
@@ -57,15 +59,13 @@ def store_creds(email, expire_time):
         expire NUMERIC
     )"""
     )
-    cursor.execute(
-        """INSERT INTO creds VALUES(?,?)""", (email, expire_time)
-    )
+    cursor.execute("""INSERT INTO creds VALUES(?,?)""", (email, expire_time))
     db.commit()
     db.close()
 
 
 def update_expire_time(email):
-    expire_time = TOKEN_EXPIRE_TIME
+    expire_time = time() + 3600
 
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
@@ -247,7 +247,7 @@ def createToken(email, password):
 
     login_response = jiotv_obj.login(email, password)
     if login_response == "[SUCCESS]":
-        store_creds(email, TOKEN_EXPIRE_TIME)
+        store_creds(email)
         jiotv_obj.update_headers()
         return login_response
 
