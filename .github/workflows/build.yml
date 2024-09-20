@@ -12,12 +12,14 @@ jobs:
     steps:
       - name: Create Release
         id: create_release
-        uses: elgohr/Github-Release-Action@v5
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag: ${{ github.ref }}
-          title: Release ${{ github.ref }}
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
       - name: Output Release URL File
         run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
       - name: Save Release URL File for publish
@@ -68,7 +70,7 @@ jobs:
             ASSET_MIME: application/zip
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.8
+      - name: Set up Python 3.10.X
         uses: actions/setup-python@v5
         with:
           python-version: 3.10.11
