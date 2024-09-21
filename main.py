@@ -21,8 +21,6 @@ logger = logging.getLogger("uvicorn")
 jiotv_obj = JioTV(logger)
 localip = jiotv_obj.get_local_ip()
 
-TOKEN_EXPIRE_TIME = time() + 3600
-
 
 def convert(m3u_file: str):
     m3u_json = []
@@ -48,33 +46,33 @@ def convert(m3u_file: str):
     return result
 
 
-def store_creds(email):
+def store_creds(phone_number):
     # Store the credentials along with expire time in sqlite
     expire_time = time() + 3600
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS creds(
-        email TEXT,
+        phone_number TEXT,
         expire NUMERIC
     )"""
     )
-    cursor.execute("""INSERT INTO creds VALUES(?,?)""", (email, expire_time))
+    cursor.execute("""INSERT INTO creds VALUES(?,?)""", (phone_number, expire_time))
     db.commit()
     db.close()
 
 
-def update_expire_time(email):
+def update_expire_time(phone_number):
     expire_time = time() + 3600
 
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
 
     cursor.execute(
-        """UPDATE creds SET expire = ? WHERE email = ?""",
+        """UPDATE creds SET expire = ? WHERE phone_number = ?""",
         (
             expire_time,
-            email,
+            phone_number,
         ),
     )
     db.commit()
@@ -88,6 +86,14 @@ def get_expire():
     expire_time = cursor.fetchone()[0]
     db.close()
     return expire_time
+
+def get_phone_number():
+    db = sqlite3.connect("creds.db")
+    cursor = db.cursor()
+    cursor.execute("""SELECT phone_number FROM creds""")
+    phone_number = cursor.fetchone()[0]
+    db.close()
+    return phone_number
 
 
 def clear_creds():
@@ -202,7 +208,9 @@ async def middleware(request: Request, call_next):
             if jiotv_obj.refresh_token():
                 jiotv_obj.update_headers()
                 logger.info("[*] Session Refreshed.")
-                update_expire_time()
+                
+                update_expire_time(phone_number=get_phone_number())
+                
                 response = await call_next(request)
                 return response
             else:
@@ -226,14 +234,14 @@ def get_otp(phone_no):
 
 
 @app.get("/createToken")
-def createToken(email, password):
-    email = email.replace("+91", "")
+def createToken(phone_number, otp):
+    phone_number = phone_number.replace("+91", "")
     """
-    A function that creates a token for the given email and password.
+    A function that creates a token for the given phone_number and otp.
 
     Parameters:
-        email (str): The email of the user.
-        password (str): The password of the user.
+        phone_number (str): The phone_number of the user.
+        otp (str): The otp of the user.
 
     Returns:
         str: The login response containing the token.
@@ -245,9 +253,9 @@ def createToken(email, password):
     else:
         logger.info("[-] First Time Logging in.")
 
-    login_response = jiotv_obj.login(email, password)
+    login_response = jiotv_obj.login(phone_number, otp)
     if login_response == "[SUCCESS]":
-        store_creds(email)
+        store_creds(phone_number)
         jiotv_obj.update_headers()
         return login_response
 

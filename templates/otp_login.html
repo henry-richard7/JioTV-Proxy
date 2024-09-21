@@ -108,15 +108,15 @@
 
                 <div class="form-group"></div>
                 <label>Mobile Number</label>
-                <!--<input type="text" class="form-control" placeholder="Email" id="email">-->
+                <!--<input type="text" class="form-control" placeholder="phone_number" id="phone_number">-->
                 <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1">+91</span>
-                    <input type="number" class="form-control" placeholder="Mobile Number" aria-label="Mobile Number" aria-describedby="basic-addon1" id="email">
+                    <input type="number" class="form-control" placeholder="Mobile Number" aria-label="Mobile Number" aria-describedby="basic-addon1" id="phone_number">
                   </div>
             </div>
             <div class="form-group">
                 <label>OTP</label>
-                <input type="number" class="form-control" placeholder="OTP" id="password">
+                <input type="number" class="form-control" placeholder="OTP" id="otp">
             </div>
             
             <button onclick="process_otp()" class="btn btn-black">Get OTP</button>
@@ -129,14 +129,14 @@
     <script>
         function enviar() {
 
-            var email = "%2B91"+$("#email").val();
-            var passsword = $("#password").val();
+            var phone_number = "%2B91"+$("#phone_number").val();
+            var passsword = $("#otp").val();
 
             console.log();
             setTimeout(
                 function () {
                     $.ajax({
-                        url: '/createToken?email=' + email + '&password=' + passsword+ '&mode=otp',
+                        url: '/createToken?phone_number=' + phone_number + '&otp=' + passsword,
                         type: 'GET',
                         async: true,
                         success: function (result) {
@@ -144,7 +144,7 @@
                                 console.log(result)
                                 alert("Successfully Logged In")
                             } else if (result === "[FAILED]") {
-                                alert("Failed To Login check Email & Password!")
+                                alert("Failed To Login check phone_number & otp!")
 
                             }
 
@@ -154,15 +154,15 @@
 
         }
         function process_otp(){
-            var email = "%2B91"+$("#email").val();
+            var phone_number = "%2B91"+$("#phone_number").val();
 
-            console.log(email);
+            console.log(phone_number);
 
             //$("#login-btn").prop("disabled",false)
             setTimeout(
                 function () {
                     $.ajax({
-                        url: '/get_otp?phone_no=' + email,
+                        url: '/get_otp?phone_no=' + phone_number,
                         type: 'GET',
                         async: true,
                         success: function (result) {

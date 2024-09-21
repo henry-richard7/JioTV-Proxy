@@ -18,7 +18,7 @@ IMG_CATCHUP_SHOWS = "https://jiotv.catchup.cdn.jio.com/dare_images/shows/"
 FEATURED_SRC = (
     "https://tv.media.jio.com/apis/v1.6/getdata/featurednew?start=0&limit=30&langId=6"
 )
-CHANNELS_SRC_NEW = "https://jiotv.data.cdn.jio.com/apis/v1.4/getMobileChannelList/get/?langId=6&os=android&devicetype=phone&usertype=tvYR7NSNn7rymo3F&version=285"
+CHANNELS_SRC_NEW = "https://jiotv.data.cdn.jio.com/apis/v3.0/getMobileChannelList/get/?os=android&devicetype=phone&usertype=tvYR7NSNn7rymo3F&version=285"
 GET_CHANNEL_URL = "https://jiotvapi.media.jio.com/playback/apis/v1/geturl?langId=6"
 CATCHUP_SRC = "https://jiotv.data.cdn.jio.com/apis/v1.3/getepg/get?offset={0}&channel_id={1}&langId=6"
 M3U_CHANNEL = '\n#EXTINF:0 tvg-id="{tvg_id}" tvg-name="{channel_name}" group-title="{group_title}" tvg-chno="{tvg_chno}" tvg-logo="{tvg_logo}"{catchup},{channel_name}\n{play_url}'
@@ -165,12 +165,9 @@ class JioTV:
         None
         """
 
-        headers = {
-            "Accept": "*/*",
-            "User-Agent": "plaYtv/7.0.8 (Linux;Android 7.1.2) ExoPlayerLib/2.11.7",
-        }
-
-        response = await httpx.AsyncClient().get(CHANNELS_SRC_NEW, headers=headers)
+        response = await httpx.AsyncClient().get(
+            CHANNELS_SRC_NEW, headers=self.channel_headers
+        )
         response = response.json()["result"]
         with open(r"data\channels.json", "w") as f:
             json.dump(response, f, ensure_ascii=False, indent=4)
@@ -524,8 +521,9 @@ class JioTV:
         return temp_text
 
     async def get_playlists(self, host):
-        url = "https://jiotv.data.cdn.jio.com/apis/v1.4/getMobileChannelList/get/?os=android&devicetype=phone"
-        response = await httpx.AsyncClient().get(url)
+        response = await httpx.AsyncClient().get(
+            CHANNELS_SRC_NEW, headers=self.channel_headers
+        )
         response = response.json()
 
         channels = response["result"]
