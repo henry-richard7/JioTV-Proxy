@@ -11,7 +11,7 @@ from models.JioTV.ExceptionModels import (
     JiotvSessionExpiredException,
 )
 
-from Modules.utils import JioTV
+from Modules.JioTV import JioTV
 from time import time
 
 from os import path

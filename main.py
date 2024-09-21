@@ -11,7 +11,7 @@ from models.JioTV.ExceptionModels import (
     JiotvSessionExpiredException,
 )
 
-from Modules.utils import JioTV
+from Modules.JioTV import JioTV
 import logging
 
 logger = logging.getLogger("uvicorn")
