@@ -87,6 +87,7 @@ def get_expire():
     db.close()
     return expire_time
 
+
 def get_phone_number():
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
@@ -204,13 +205,14 @@ async def middleware(request: Request, call_next):
             )
 
         elif token_check == "Expired":
+            refreshed_token = await jiotv_obj.refresh_token()
 
-            if jiotv_obj.refresh_token():
+            if refreshed_token:
                 jiotv_obj.update_headers()
                 logger.info("[*] Session Refreshed.")
-                
+
                 update_expire_time(phone_number=get_phone_number())
-                
+
                 response = await call_next(request)
                 return response
             else:

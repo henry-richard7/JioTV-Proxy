@@ -277,8 +277,9 @@ class JioTV:
         else:
             return "[FAILED]"
 
-    def refresh_token(self):
-        auth_headers = json.load(open(path.join("data", "jio_headers.json"), "r"))
+    async def refresh_token(self):
+        with open(path.join("data", "jio_headers.json"), "r") as auth_file:
+            auth_headers = json.load(auth_file)
 
         post_body = {
             "appName": "RJIL_JioTV",
@@ -296,13 +297,22 @@ class JioTV:
             "User-Agent": "okhttp/4.2.2",
         }
 
-        resp = httpx.post(
-            REFRESH_TOKEN_URL, headers=refresh_token_headers, json=post_body
-        ).json()
+        # resp = httpx.post(
+        #     REFRESH_TOKEN_URL, headers=refresh_token_headers, json=post_body
+        # ).json()
+
+        async with httpx.AsyncClient() as async_client:
+            resp = await async_client.post(
+                REFRESH_TOKEN_URL,
+                headers=refresh_token_headers,
+                json=post_body,
+            )
+
+        resp = resp.json()
 
         if resp.get("authToken"):
             auth_headers["accesstoken"] = resp.get("authToken")
-            with open("data/jio_headers.json", "w") as f:
+            with open(path.join("data", "jio_headers.json"), "w") as f:
                 json.dump(auth_headers, f, indent=4)
 
             return True
@@ -327,7 +337,7 @@ class JioTV:
         headers["cookie"] = cookie
         headers["Content-type"] = "application/octet-stream"
 
-        resp = await httpx.AsyncClient().get(uri, headers=headers)
+        resp = await httpx.AsyncClient().get(uri, headers=headers, timeout=None)
         resp = resp.content
 
         return resp
@@ -349,7 +359,7 @@ class JioTV:
         headers["srno"] = "240707144000"
         headers["cookie"] = cookie
 
-        resp = await httpx.AsyncClient().get(uri, headers=headers)
+        resp = await httpx.AsyncClient().get(uri, headers=headers, timeout=None)
         return resp.content
 
     async def get_audio(self, uri, cid, cookie):
@@ -495,7 +505,7 @@ class JioTV:
         headers["srno"] = "240707144000"
         headers["cookie"] = cookie
 
-        resp = await httpx.AsyncClient().get(uri, headers=headers)
+        resp = await httpx.AsyncClient().get(uri, headers=headers, timeout=None)
         resp = resp.text
 
         parsed_m3u8 = m3u8.loads(resp)
