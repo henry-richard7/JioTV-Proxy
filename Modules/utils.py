@@ -386,13 +386,13 @@ class JioTV:
         for segment in parsed_audio_m3u8.segments:
             audio_m3u8 = audio_m3u8.replace(
                 segment.uri,
-                f"/get_ts?uri={base_url}/{segment.uri}&cid={cid}&cookie={cookie}",
+                f"/jiotv/get_ts?uri={base_url}/{segment.uri}&cid={cid}&cookie={cookie}",
             )
 
         for key in parsed_audio_m3u8.keys:
             if key is not None:
                 audio_m3u8 = audio_m3u8.replace(
-                    key.uri, f"/get_key?uri={key.uri}&cid={cid}&cookie={cookie}"
+                    key.uri, f"/jiotv/get_key?uri={key.uri}&cid={cid}&cookie={cookie}"
                 )
 
         return audio_m3u8
@@ -425,7 +425,7 @@ class JioTV:
         for segment in parsed_subs.segments:
             resp = resp.replace(
                 segment.uri,
-                f"/get_vtt?uri={base_url}/{segment.uri.replace('.webvtt','.vtt')}&cid={cid}&cookie={cookie}",
+                f"/jiotv/get_vtt?uri={base_url}/{segment.uri.replace('.webvtt','.vtt')}&cid={cid}&cookie={cookie}",
             )
 
         return resp
@@ -467,21 +467,21 @@ class JioTV:
         for playlist in firast_m3u8_parsed.playlists:
             final_ = final_.replace(
                 playlist.uri,
-                f"/play?uri={base_url}/{playlist.uri}&cid={channel_id}&cookie={cookie}",
+                f"/jiotv/play?uri={base_url}/{playlist.uri}&cid={channel_id}&cookie={cookie}",
             )
 
         for media in firast_m3u8_parsed.media:
             if media.type == "SUBTITLES":
                 final_ = final_.replace(
                     media.uri,
-                    f"/get_subs?uri={base_url}/{media.uri}&cid={channel_id}&cookie={cookie}",
+                    f"/jiotv/get_subs?uri={base_url}/{media.uri}&cid={channel_id}&cookie={cookie}",
                 )
 
         for media in firast_m3u8_parsed.media:
             if media.type == "AUDIO" and media.uri is not None:
                 final_ = final_.replace(
                     media.uri,
-                    f"/get_audio?uri={base_url}/{media.uri}&cid={channel_id}&cookie={cookie}",
+                    f"/jiotv/get_audio?uri={base_url}/{media.uri}&cid={channel_id}&cookie={cookie}",
                 )
         return final_
 
@@ -519,13 +519,13 @@ class JioTV:
         for segment in parsed_m3u8.segments:
             temp_text = temp_text.replace(
                 segment.uri,
-                f"/get_ts?uri={base_url}/{segment.uri}&cid={cid}&cookie={cookie}",
+                f"/jiotv/get_ts?uri={base_url}/{segment.uri}&cid={cid}&cookie={cookie}",
             )
 
         for key in parsed_m3u8.keys:
             if key is not None:
                 temp_text = temp_text.replace(
-                    key.uri, f"/get_key?uri={key.uri}&cid={cid}&cookie={cookie}"
+                    key.uri, f"/jiotv/get_key?uri={key.uri}&cid={cid}&cookie={cookie}"
                 )
 
         return temp_text
@@ -583,6 +583,6 @@ class JioTV:
             )
             channel_name = channel["channel_name"]
             channel_genre = genre_id[channel["channelCategoryId"]]
-            m3u8 += f'#EXTINF:-1 tvg-id="{channel_id}" group-title="{channel_genre}" tvg-logo="{channel_logo}",{channel_name}\nhttp://{host}/m3u8?cid={channel_id}\n'
+            m3u8 += f'#EXTINF:-1 tvg-id="{channel_id}" group-title="{channel_genre}" tvg-logo="{channel_logo}",{channel_name}\nhttp://{host}/jiotv/m3u8?cid={channel_id}\n'
 
         return m3u8.strip()
