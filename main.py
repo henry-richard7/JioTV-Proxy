@@ -3,7 +3,7 @@ import multiprocessing
 
 from typing import Optional
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException, Depends, status
 from fastapi.responses import PlainTextResponse, Response, JSONResponse
 
 from fastapi.templating import Jinja2Templates
@@ -147,13 +147,75 @@ def welcome_msg():
     print()
 
 
+class JiotvUnauthorizedException(Exception):
+    def __init__(self, name: str):
+        self.name = name
+
+
+class JiotvSessionExpiredException(Exception):
+    def __init__(self, name: str):
+        self.name = name
+
+
+async def jiotv_authenticated_depends():
+    token_check = check_session()
+
+    if token_check == "Not Logged In":
+        raise JiotvUnauthorizedException
+    elif token_check == "Expired":
+
+        refreshed_token = await jiotv_obj.refresh_token()
+
+        if refreshed_token:
+            jiotv_obj.update_headers()
+            logger.info("[*] Session Refreshed.")
+
+            update_expire_time(phone_number=get_phone_number())
+        else:
+            raise JiotvSessionExpiredException
+    else:
+        pass
+
+
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
+@app.exception_handler(JiotvUnauthorizedException)
+async def jiotv_unauthorized_exception_handler(
+    request: Request, exc: JiotvUnauthorizedException
+):
+    return JSONResponse(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        content={
+            "status_code": status.HTTP_401_UNAUTHORIZED,
+            "error": "Session not authenticated.",
+            "details": f"Seems like you are not logged in, please login by going to http://{request.client.host}:8000/login",
+        },
+    )
+
+
+@app.exception_handler(JiotvSessionExpiredException)
+async def jiotv_session_expired_exception_handler(
+    request: Request, exc: JiotvSessionExpiredException
+):
+    return JSONResponse(
+        status_code=status.HTTP_410_GONE,
+        content={
+            "status_code": status.HTTP_410_GONE,
+            "error": "Session Expired.",
+            "details": f"Seems like sessions has been expired, please login again at http://{request.client.host}:8000/login",
+        },
+    )
+
+
 @app.get("/")
-async def index(request: Request, query: Optional[str] = None):
+async def index(
+    request: Request,
+    query: Optional[str] = None,
+    auth_session=Depends(jiotv_authenticated_depends),
+):
     playlist_response = await jiotv_obj.get_playlists(request.headers.get("host"))
     channels = convert(playlist_response)
     search = False
@@ -169,65 +231,14 @@ async def index(request: Request, query: Optional[str] = None):
 
 
 @app.get("/player")
-async def player(request: Request, stream_url):
+async def player(
+    request: Request,
+    stream_url,
+    auth_session=Depends(jiotv_authenticated_depends),
+):
     return templates.TemplateResponse(
         "player.html", {"request": request, "stream_url": stream_url}
     )
-
-
-@app.middleware("http")
-async def middleware(request: Request, call_next):
-    """
-    Middleware function that intercepts incoming HTTP requests and performs certain actions based on the request path.
-
-    Parameters:
-        - request (Request): The incoming HTTP request object.
-        - call_next (Callable): The next middleware or route handler to call.
-
-    Returns:
-        - Response: The HTTP response object to be sent back to the client.
-    """
-    if request.url.path in ["/login", "/playlist.m3u", "/createToken", "/get_otp"]:
-        response = await call_next(request)
-        return response
-
-    else:
-        token_check = check_session()
-
-        if token_check == "Not Logged In":
-            return JSONResponse(
-                content={
-                    "status_code": 403,
-                    "error": "Session not authenticated.",
-                    "details": f"Seems like you are not logged in, please login by going to http://{localip}:8000/login",
-                },
-                status_code=403,
-            )
-
-        elif token_check == "Expired":
-            refreshed_token = await jiotv_obj.refresh_token()
-
-            if refreshed_token:
-                jiotv_obj.update_headers()
-                logger.info("[*] Session Refreshed.")
-
-                update_expire_time(phone_number=get_phone_number())
-
-                response = await call_next(request)
-                return response
-            else:
-                return JSONResponse(
-                    content={
-                        "status_code": 403,
-                        "error": "Session Expired.",
-                        "details": f"Session has been expired. Please try logging in again.",
-                    },
-                    status_code=403,
-                )
-
-        else:
-            response = await call_next(request)
-            return response
 
 
 @app.get("/get_otp")
@@ -279,7 +290,10 @@ async def loginJio(request: Request):
 
 
 @app.get("/playlist.m3u")
-async def get_playlist(request: Request):
+async def get_playlist(
+    request: Request,
+    auth_session=Depends(jiotv_authenticated_depends),
+):
     """
     Retrieves a playlist in the form of an m3u file.
 
@@ -291,7 +305,10 @@ async def get_playlist(request: Request):
 
 
 @app.get("/m3u8")
-async def get_m3u8(cid):
+async def get_m3u8(
+    cid,
+    auth_session=Depends(jiotv_authenticated_depends),
+):
     """
     Retrieves the m3u8 playlist for a given channel ID.
 
@@ -306,7 +323,12 @@ async def get_m3u8(cid):
 
 
 @app.get("/get_audio")
-async def get_multi_audio(uri, cid, cookie):
+async def get_multi_audio(
+    uri,
+    cid,
+    cookie,
+    auth_session=Depends(jiotv_authenticated_depends),
+):
     """
     A function that handles the GET request to retrieve audio.
 
@@ -323,7 +345,12 @@ async def get_multi_audio(uri, cid, cookie):
 
 
 @app.get("/get_subs")
-async def get_subtitles(uri, cid, cookie):
+async def get_subtitles(
+    uri,
+    cid,
+    cookie,
+    auth_session=Depends(jiotv_authenticated_depends),
+):
     """
     Retrieves subtitles for a given URI using the specified CID and cookie.
 
@@ -341,13 +368,23 @@ async def get_subtitles(uri, cid, cookie):
 
 
 @app.get("/get_vtt")
-async def get_vtt_(uri, cid, cookie):
+async def get_vtt_(
+    uri,
+    cid,
+    cookie,
+    auth_session=Depends(jiotv_authenticated_depends),
+):
     resp = await jiotv_obj.get_vtt(uri, cid, cookie)
     return PlainTextResponse(resp, media_type="text/vtt")
 
 
 @app.get("/get_ts")
-async def get_tts(uri, cid, cookie):
+async def get_tts(
+    uri,
+    cid,
+    cookie,
+    auth_session=Depends(jiotv_authenticated_depends),
+):
     """
     A function that handles GET requests to the "/get_ts" endpoint.
 
@@ -364,7 +401,12 @@ async def get_tts(uri, cid, cookie):
 
 
 @app.get("/get_key")
-async def get_keys(uri, cid, cookie):
+async def get_keys(
+    uri,
+    cid,
+    cookie,
+    auth_session=Depends(jiotv_authenticated_depends),
+):
     """
     Retrieves a key from the specified URI using the provided CID and cookie.
 
@@ -381,7 +423,12 @@ async def get_keys(uri, cid, cookie):
 
 
 @app.get("/play")
-async def play(uri, cid, cookie):
+async def play(
+    uri,
+    cid,
+    cookie,
+    auth_session=Depends(jiotv_authenticated_depends),
+):
     """
     This function is a route handler for the "/play" endpoint of the API. It expects three parameters:
 

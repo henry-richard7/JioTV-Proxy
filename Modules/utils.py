@@ -445,7 +445,7 @@ class JioTV:
         """
         rjson = {"channel_id": int(channel_id), "stream_type": "Seek"}
         resp = await httpx.AsyncClient().post(
-            GET_CHANNEL_URL, headers=self.channel_headers, data=rjson
+            GET_CHANNEL_URL, headers=self.channel_headers, data=rjson, timeout=None
         )
 
         resp = resp.json()
