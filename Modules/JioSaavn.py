@@ -20,9 +20,9 @@ class JioSaavnApi:
         return dec_url
 
     async def home_page(
-        self, home_input: HomeModels.HomeInput
+        self, language: HomeModels.Languages
     ) -> HomeModels.HomePageResponse:
-        cookies = {"L": home_input.language.value}
+        cookies = {"L": language.value}
 
         request_params = {"__call": "content.getHomepageData"}
         async with AsyncClient() as async_client:
@@ -45,14 +45,11 @@ class JioSaavnApi:
             new_albums=new_albums, featured_playlists=featured_playlists, charts=charts
         )
 
-    async def album_details(
-        self,
-        album_id: AlbumDetailsModel.AlbumInput,
-    ) -> AlbumDetailsModel.AlbumDetails:
+    async def album_details(self, album_id: str) -> AlbumDetailsModel.AlbumDetails:
 
         request_params = {
             "__call": "content.getAlbumDetails",
-            "albumid": album_id.album_id,
+            "albumid": album_id,
         }
         async with AsyncClient() as async_client:
             resp = await async_client.get(self.jio_api_base_url, params=request_params)
@@ -65,39 +62,36 @@ class JioSaavnApi:
         result = AlbumDetailsModel.AlbumDetails(album_detail=album_details, songs=songs)
         return result
 
-    async def search(
-        self,
-        search_input: SearchModel.SearchInputModel,
-    ) -> Union[
+    async def search(self, query: str, search_mode: SearchModel.SearchModes) -> Union[
         list[SearchModel.Song],
         list[SearchModel.Album],
         list[SearchModel.Artist],
         list[SearchModel.Playlist],
     ]:
         request_params = {
-            "__call": search_input.search_mode.value,
+            "__call": search_mode.value,
             "_format": "json",
             "_marker": "0",
             "n": "151353",
             "api_version": "4",
             "ctx": "web6dot0",
-            "q": search_input.query,
+            "q": query,
         }
         async with AsyncClient() as async_client:
             resp = await async_client.get(self.jio_api_base_url, params=request_params)
 
         resp: dict = resp.json()
 
-        if search_input.search_mode == SearchModel.SearchModes.SONGS:
+        if search_mode == SearchModel.SearchModes.SONGS:
             return [SearchModel.Song(**song) for song in resp.get("results")]
 
-        elif search_input.search_mode == SearchModel.SearchModes.ALBUMS:
+        elif search_mode == SearchModel.SearchModes.ALBUMS:
             return [SearchModel.Album(**album) for album in resp.get("results")]
 
-        elif search_input.search_mode == SearchModel.SearchModes.ARTISTS:
+        elif search_mode == SearchModel.SearchModes.ARTISTS:
             return [SearchModel.Artist(**artist) for artist in resp.get("results")]
 
-        elif search_input.search_mode == SearchModel.SearchModes.PLAYLISTS:
+        elif search_mode == SearchModel.SearchModes.PLAYLISTS:
             return [
                 SearchModel.Playlist(**playlist) for playlist in resp.get("results")
             ]
