@@ -47,7 +47,7 @@
     </nav>
 
     <div class="container mb-3 pt-3">
-      <form action="/" method="get" target="">
+      <form action="/jiotv" method="get" target="">
         <div class="input-group mb-3">
           <input
             type="text"
@@ -87,7 +87,7 @@
             <h5 class="card-title">{{ channel.title }}</h5>
             <a
               class="btn btn-primary"
-              href="/player?stream_url={{ channel.link }}"
+              href="/jiotv/player?stream_url={{ channel.link }}"
               role="button"
               >Watch Live Now</a
             >
@@ -98,7 +98,7 @@
     </div>
     <div class="container text-center mb-2">
       {% if search and query.strip()%}
-      <a type="button" class="btn btn-outline-success btn-lg" href="/"
+      <a type="button" class="btn btn-outline-success btn-lg" href="/jiotv"
         >Show all</a
       >
       {% endif %}
