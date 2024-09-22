@@ -2,7 +2,12 @@ from typing import Union
 from httpx import AsyncClient
 import base64
 from pyDes import des, ECB, PAD_PKCS5
-from models.JioSaavn import HomeModels, AlbumDetailsModel, SearchModel
+from models.JioSaavn import (
+    HomeModels,
+    AlbumDetailsModel,
+    SearchModel,
+    ArtistDetailsModel,
+)
 
 
 class JioSaavnApi:
@@ -61,6 +66,22 @@ class JioSaavnApi:
 
         result = AlbumDetailsModel.AlbumDetails(album_detail=album_details, songs=songs)
         return result
+
+    async def artist_details(self, artist_id: str) -> ArtistDetailsModel.ArtistDetail:
+        request_params = {
+            "__call": "artist.getArtistPageDetails",
+            "_format": "json",
+            "_marker": "0",
+            "api_version": "4",
+            "sort_by": "latest",
+            "sortOrder": "desc",
+            "artistId": artist_id,
+        }
+        async with AsyncClient() as async_client:
+            resp = await async_client.get(self.jio_api_base_url, params=request_params)
+
+        resp: dict = resp.json()
+        return ArtistDetailsModel.ArtistDetail(**resp)
 
     async def search(self, query: str, search_mode: SearchModel.SearchModes) -> Union[
         list[SearchModel.Song],
