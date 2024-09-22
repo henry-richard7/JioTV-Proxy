@@ -2,6 +2,10 @@ from pydantic import BaseModel, Field, field_validator, ValidationInfo
 from html import unescape
 
 
+class AlbumInput(BaseModel):
+    album_id: str
+
+
 class Song(BaseModel):
     id: str
     title: str = Field(..., alias="song")

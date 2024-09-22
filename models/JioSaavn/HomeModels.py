@@ -1,52 +1,82 @@
 from pydantic import BaseModel, computed_field, Field
+from enum import Enum
+
+
+class Languages(Enum):
+    Tamil = "tamil"
+    Hindi = "hindi"
+    English = "english"
+    Telugu = "telugu"
+    Punjabi = "punjabi"
+    Marathi = "marathi"
+    Gujarati = "gujarati"
+    Bengali = "bengali"
+    Kannada = "kannada"
+    Bhojpuri = "bhojpuri"
+    Malayalam = "malayalam"
+    Urdu = "urdu"
+    Haryanvi = "haryanvi"
+    Rajasthani = "rajasthani"
+    Odia = "odia"
+    Assamese = "assamese"
+
+
+class HomeInput(BaseModel):
+    language: Languages
+
 
 class Music(BaseModel):
-    id:str
-    name:str
-    
+    id: str
+    name: str
+
+
 class Songs(BaseModel):
-    name:str
-    image:str
-    
+    name: str
+    image: str
+
+
 class ChartItem(BaseModel):
-    listid:str
-    listname:str
-    image:str
-    weight:int
+    listid: str
+    listname: str
+    image: str
+    weight: int
     songs: list[Songs]
-    perma_url:str
+    perma_url: str
+
 
 class NewAlbumItem(BaseModel):
-    query:str
-    text:str
-    year:str
-    image:str
-    albumid:str
-    title:str
-    Artist:dict = Field(...,alias='Artist',exclude=True)
-    weight:int
-    language:str
-    
+    query: str
+    text: str
+    year: str
+    image: str
+    albumid: str
+    title: str
+    Artist: dict = Field(..., alias="Artist", exclude=True)
+    weight: int
+    language: str
+
     @computed_field
     @property
     def artists(self) -> list[Music]:
-        return [Music(**artist) for artist in self.Artist.get('music')]
-    
+        return [Music(**artist) for artist in self.Artist.get("music")]
+
+
 class FeaturedPlaylistItem(BaseModel):
-    listid:str
-    secondary_subtitle:str
-    firstname:str
-    listname:str
-    data_type:str
-    count:int
-    image:str
-    sponsored:bool
-    perma_url:str
-    follower_count:str
-    uid:str
-    last_updated:int
-    
+    listid: str
+    secondary_subtitle: str
+    firstname: str
+    listname: str
+    data_type: str
+    count: int
+    image: str
+    sponsored: bool
+    perma_url: str
+    follower_count: str
+    uid: str
+    last_updated: int
+
+
 class HomePageResponse(BaseModel):
-    new_albums:list[NewAlbumItem]
-    featured_playlists:list[FeaturedPlaylistItem]
-    charts:list[ChartItem]
+    new_albums: list[NewAlbumItem]
+    featured_playlists: list[FeaturedPlaylistItem]
+    charts: list[ChartItem]

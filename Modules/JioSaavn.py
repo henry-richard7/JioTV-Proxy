@@ -19,8 +19,10 @@ class JioSaavnApi:
         dec_url = dec_url.replace("_96.mp4", "_320.mp3")
         return dec_url
 
-    async def home_page(self, language: str) -> HomeModels.HomePageResponse:
-        cookies = {"L": language}
+    async def home_page(
+        self, home_input: HomeModels.HomeInput
+    ) -> HomeModels.HomePageResponse:
+        cookies = {"L": home_input.language.value}
 
         request_params = {"__call": "content.getHomepageData"}
         async with AsyncClient() as async_client:
@@ -43,11 +45,14 @@ class JioSaavnApi:
             new_albums=new_albums, featured_playlists=featured_playlists, charts=charts
         )
 
-    async def album_details(self, album_id: str) -> AlbumDetailsModel.AlbumDetails:
+    async def album_details(
+        self,
+        album_id: AlbumDetailsModel.AlbumInput,
+    ) -> AlbumDetailsModel.AlbumDetails:
 
         request_params = {
             "__call": "content.getAlbumDetails",
-            "albumid": album_id,
+            "albumid": album_id.album_id,
         }
         async with AsyncClient() as async_client:
             resp = await async_client.get(self.jio_api_base_url, params=request_params)
