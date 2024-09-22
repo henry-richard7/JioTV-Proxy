@@ -20,10 +20,11 @@ localip = jiotv_obj.get_local_ip()
 
 
 def welcome_msg():
-    print("Welcome to JioTV-Proxy")
-    print(f"TV Web Player: http://{localip}:8000/jiotv")
-    print(f"Please Login at http://{localip}:8000/jiotv/login")
-    print(f"Playlist m3u: http://{localip}:8000/jiotv/playlist.m3u")
+    print("Welcome to Jio Proxy")
+    print("To Watch Live-TV:")
+    print(f"\tTV Web Player: http://{localip}:8000/jiotv")
+    print(f"\tPlease Login at http://{localip}:8000/jiotv/login")
+    print(f"\tPlaylist m3u: http://{localip}:8000/jiotv/playlist.m3u")
     print()
 
 
