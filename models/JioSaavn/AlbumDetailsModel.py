@@ -1,4 +1,5 @@
-from pydantic import BaseModel, computed_field, Field, field_validator, ValidationInfo
+from pydantic import BaseModel, Field, field_validator, ValidationInfo
+from html import unescape
 
 
 class Song(BaseModel):
@@ -15,10 +16,12 @@ class Song(BaseModel):
     duration: str
     release_date: str
 
-    @field_validator("image", mode="before")
+    @field_validator("*", mode="before")
     def image_resolution_fix(cls, value: str, info: ValidationInfo):
         if info.field_name == "image":
             return value.replace("150x150", "500x500")
+        else:
+            return unescape(value)
 
 
 class AlbumDetail(BaseModel):
@@ -32,12 +35,17 @@ class AlbumDetail(BaseModel):
     perma_url: str
     image: str
 
-    @field_validator("primary_artists", "primary_artists_id", "image", mode="before")
-    def string_to_list(cls, value: str, info: ValidationInfo):
+    @field_validator("*", mode="before")
+    def image_resolution_fix(cls, value: str, info: ValidationInfo):
         if info.field_name == "image":
             return value.replace("150x150", "500x500")
-        elif isinstance(value, str):
+        elif (
+            info.field_name == "primary_artists"
+            or info.field_name == "primary_artists_id"
+        ):
             return value.split(", ")
+        else:
+            return unescape(value)
 
 
 class AlbumDetails(BaseModel):

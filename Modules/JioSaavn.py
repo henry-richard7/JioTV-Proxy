@@ -1,7 +1,8 @@
+from typing import Union
 from httpx import AsyncClient
 import base64
 from pyDes import des, ECB, PAD_PKCS5
-from models.JioSaavn import HomeModels, AlbumDetailsModel
+from models.JioSaavn import HomeModels, AlbumDetailsModel, SearchModel
 
 
 class JioSaavnApi:
@@ -58,3 +59,42 @@ class JioSaavnApi:
 
         result = AlbumDetailsModel.AlbumDetails(album_detail=album_details, songs=songs)
         return result
+
+    async def search(
+        self,
+        search_input: SearchModel.SearchInputModel,
+    ) -> Union[
+        list[SearchModel.Song],
+        list[SearchModel.Album],
+        list[SearchModel.Artist],
+        list[SearchModel.Playlist],
+    ]:
+        request_params = {
+            "__call": search_input.search_mode.value,
+            "_format": "json",
+            "_marker": "0",
+            "n": "151353",
+            "api_version": "4",
+            "ctx": "web6dot0",
+            "q": search_input.query,
+        }
+        async with AsyncClient() as async_client:
+            resp = await async_client.get(self.jio_api_base_url, params=request_params)
+
+        resp: dict = resp.json()
+
+        if search_input.search_mode == SearchModel.SearchModes.SONGS:
+            return [SearchModel.Song(**song) for song in resp.get("results")]
+
+        elif search_input.search_mode == SearchModel.SearchModes.ALBUMS:
+            return [SearchModel.Album(**album) for album in resp.get("results")]
+
+        elif search_input.search_mode == SearchModel.SearchModes.ARTISTS:
+            return [SearchModel.Artist(**artist) for artist in resp.get("results")]
+
+        elif search_input.search_mode == SearchModel.SearchModes.PLAYLISTS:
+            return [
+                SearchModel.Playlist(**playlist) for playlist in resp.get("results")
+            ]
+
+        return None
