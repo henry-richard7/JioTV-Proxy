@@ -143,6 +143,10 @@
         function myFunction() {
           var albums_search_checked = document.getElementById("albums").checked;
           var songs_search_checked = document.getElementById("songs").checked;
+          var artists_search_checked =
+            document.getElementById("artists").checked;
+          var playlists_search_checked =
+            document.getElementById("playlists").checked;
 
           if (albums_search_checked === true) {
             query = document.getElementById("query").value;
@@ -154,6 +158,18 @@
             query = document.getElementById("query").value;
             window.open(
               "/jio_saavn/search?search_mode=SONGS&query=" + query,
+              "_self"
+            );
+          } else if (artists_search_checked === true) {
+            query = document.getElementById("query").value;
+            window.open(
+              "/jio_saavn/search?search_mode=ARTISTS&query=" + query,
+              "_self"
+            );
+          } else if (playlists_search_checked === true) {
+            query = document.getElementById("query").value;
+            window.open(
+              "/jio_saavn/search?search_mode=PLAYLIST&query=" + query,
               "_self"
             );
           }

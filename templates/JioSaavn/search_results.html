@@ -143,17 +143,36 @@
         function myFunction() {
           var albums_search_checked = document.getElementById("albums").checked;
           var songs_search_checked = document.getElementById("songs").checked;
+          var artists_search_checked =
+            document.getElementById("artists").checked;
+          var playlists_search_checked =
+            document.getElementById("playlists").checked;
 
           if (albums_search_checked === true) {
             query = document.getElementById("query").value;
             window.open(
-              "/jio_saavn/search?search_mode=ALBUMS&query=" + query,
+              "/jio_saavn/search?search_mode=search.getAlbumResults&query=" +
+                query,
               "_self"
             );
           } else if (songs_search_checked === true) {
             query = document.getElementById("query").value;
             window.open(
-              "/jio_saavn/search?search_mode=SONGS&query=" + query,
+              "/jio_saavn/search?search_mode=search.getResults&query=" + query,
+              "_self"
+            );
+          } else if (artists_search_checked === true) {
+            query = document.getElementById("query").value;
+            window.open(
+              "/jio_saavn/search?search_mode=search.getArtistResults&query=" +
+                query,
+              "_self"
+            );
+          } else if (playlists_search_checked === true) {
+            query = document.getElementById("query").value;
+            window.open(
+              "/jio_saavn/search?search_mode=search.getPlaylistResults&query=" +
+                query,
               "_self"
             );
           }
@@ -186,33 +205,85 @@
             Albums
           </label>
         </div>
+        <div class="form-check form-check-inline">
+          <label class="form-check-label">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="search-type-radio"
+              id="artists"
+              value="artists"
+            />
+            Artists
+          </label>
+        </div>
+        <div class="form-check form-check-inline">
+          <label class="form-check-label">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="search-type-radio"
+              id="playlists"
+              value="playlists"
+            />
+            Playlists
+          </label>
+        </div>
       </div>
     </div>
-    <h1 class="text-center">Search Results for {{ songName }}</h1>
+    <h1 class="text-center">Search Results for {{ query }}</h1>
     <div class="search-results">
       <div class="container-fluid">
         <div class="row">
-          {% for songID,image,songs_title,year in
-          zip(songIDs,images,songs_titles, years) %}
+          {% for result in results %}
           <div class="col-6 col-md-3 pt-1">
             <div class="card">
               <img
                 class="card-img-top"
-                src="{{ image }}"
+                src="{{ result.image }}"
                 alt="Card image cap"
                 draggable="false"
               />
               <div class="card-body">
-                <h5 class="card-title text-truncate">{{ songs_title|safe }}</h5>
+                <h5 class="card-title text-truncate">
+                  {{ result.title|safe }}
+                </h5>
                 <p class="card-text fw-bold text-muted text-truncate">
-                  {{ year }}
+                  {{ result.year }}
                 </p>
+                {% if mode == "SONGS" %}
                 <a
-                  href="/play_song?songID={{ songID }}"
+                  href="/jio_saavn/play_song?song_id={{ result.id }}"
                   class="btn btn-secondary container-fluid"
                 >
-                  <i class="fas fa-music"></i> Listen</a
+                  <i class="fas fa-music"></i>
+                  Listen
+                </a>
+                {% elif mode == "ALBUMS" %}
+                <a
+                  href="/jio_saavn/album_details?album_id={{ result.id }}"
+                  class="btn btn-secondary container-fluid"
                 >
+                  <i class="fas fa-music"></i>
+                  Show Details
+                </a>
+                {% elif mode == "ARTISTS" %}
+                <a
+                  href="/jio_saavn/artists_details?artist_id={{ result.id }}"
+                  class="btn btn-secondary container-fluid"
+                >
+                  <i class="fas fa-music"></i>
+                  Show Details
+                </a>
+                {% elif mode == "PLAYLISTS" %}
+                <a
+                  href="/jio_saavn/playlists_details?playlist_id={{ result.id }}"
+                  class="btn btn-secondary container-fluid"
+                >
+                  <i class="fas fa-music"></i>
+                  Show Details
+                </a>
+                {% endif %}
               </div>
             </div>
           </div>

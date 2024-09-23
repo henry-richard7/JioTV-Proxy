@@ -199,7 +199,7 @@
       // Define the tracks that have to be played
       let track_list = [
         {
-          name: '{{song_details.title |safe}}',
+          name: '{{song_details.title.replace("'","") |safe}}',
           artist: "{{ ", ".join(song_details.artist) |safe }}",
           image: "{{song_details.image}}",
           path: "{{song_details.decoded_stream_link}}",

@@ -126,3 +126,22 @@ async def album_details_ui(
             "song_details": home_page_contents,
         },
     )
+
+
+@router.get("/search")
+async def search_ui(
+    request: Request,
+    query: str,
+    search_mode: SearchModel.SearchModes = SearchModel.SearchModes.SONGS,
+    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+):
+    home_page_contents = await jio_saavn.search(query=query, search_mode=search_mode)
+    return templates.TemplateResponse(
+        "search_results.html",
+        {
+            "request": request,
+            "mode": search_mode.name,
+            "results": home_page_contents,
+            "query": query,
+        },
+    )

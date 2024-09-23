@@ -143,17 +143,36 @@
         function myFunction() {
           var albums_search_checked = document.getElementById("albums").checked;
           var songs_search_checked = document.getElementById("songs").checked;
+          var artists_search_checked =
+            document.getElementById("artists").checked;
+          var playlists_search_checked =
+            document.getElementById("playlists").checked;
 
           if (albums_search_checked === true) {
             query = document.getElementById("query").value;
             window.open(
-              "/jio_saavn/search?search_mode=ALBUMS&query=" + query,
+              "/jio_saavn/search?search_mode=search.getAlbumResults&query=" +
+                query,
               "_self"
             );
           } else if (songs_search_checked === true) {
             query = document.getElementById("query").value;
             window.open(
-              "/jio_saavn/search?search_mode=SONGS&query=" + query,
+              "/jio_saavn/search?search_mode=search.getResults&query=" + query,
+              "_self"
+            );
+          } else if (artists_search_checked === true) {
+            query = document.getElementById("query").value;
+            window.open(
+              "/jio_saavn/search?search_mode=search.getArtistResults&query=" +
+                query,
+              "_self"
+            );
+          } else if (playlists_search_checked === true) {
+            query = document.getElementById("query").value;
+            window.open(
+              "/jio_saavn/search?search_mode=search.getPlaylistResults&query=" +
+                query,
               "_self"
             );
           }
@@ -204,8 +223,8 @@
               class="form-check-input"
               type="radio"
               name="search-type-radio"
-              id="playlist"
-              value="playlist"
+              id="playlists"
+              value="playlists"
             />
             Playlists
           </label>

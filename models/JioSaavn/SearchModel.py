@@ -14,6 +14,9 @@ class SearchModes(str, Enum):
     ALBUMS = "search.getAlbumResults"
     PLAYLISTS = "search.getPlaylistResults"
 
+    class Config:
+        use_enum_values = True
+
 
 class SearchInputModel(BaseModel):
     search_mode: SearchModes
@@ -70,7 +73,7 @@ class Album(BaseModel):
 
 
 class Artist(BaseModel):
-    name: str
+    title: str = Field(..., alias="name")
     id: str
     image: str
 
