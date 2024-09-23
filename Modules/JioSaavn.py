@@ -121,7 +121,7 @@ class JioSaavnApi:
 
         return None
 
-    async def song_details(self, song_id) -> SongDetailsModel.SongDetail:
+    async def song_details(self, song_id: str) -> SongDetailsModel.SongDetail:
         request_params = {
             "__call": "song.getDetails",
             "cc": "in",
@@ -137,7 +137,7 @@ class JioSaavnApi:
         return SongDetailsModel.SongDetail(**resp[song_id])
 
     async def playlist_details(
-        self, playlist_id
+        self, playlist_id: str
     ) -> PlaylistDetailsModel.PlaylistDetail:
         request_params = {
             "__call": "playlist.getDetails",

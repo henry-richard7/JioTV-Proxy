@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from routers import JiotvRoute
+from routers import JiotvRoute, JioSaavnRoute
 from models.JioTV.ExceptionModels import (
     JiotvUnauthorizedException,
     JiotvSessionExpiredException,
@@ -61,6 +61,8 @@ async def jiotv_session_expired_exception_handler(
 
 
 app.include_router(JiotvRoute.router, prefix="/jiotv")
+app.include_router(JioSaavnRoute.router, prefix="/jio_saavn")
+
 
 if __name__ == "__main__":
     # This is required for windows.
