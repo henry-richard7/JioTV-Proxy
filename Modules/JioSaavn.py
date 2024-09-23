@@ -8,6 +8,7 @@ from models.JioSaavn import (
     SearchModel,
     ArtistDetailsModel,
     SongDetailsModel,
+    PlaylistDetailsModel,
 )
 
 
@@ -120,7 +121,7 @@ class JioSaavnApi:
 
         return None
 
-    async def song_details(self, song_id):
+    async def song_details(self, song_id) -> SongDetailsModel.SongDetail:
         request_params = {
             "__call": "song.getDetails",
             "cc": "in",
@@ -134,3 +135,20 @@ class JioSaavnApi:
         resp: dict = resp.json()
 
         return SongDetailsModel.SongDetail(**resp[song_id])
+
+    async def playlist_details(
+        self, playlist_id
+    ) -> PlaylistDetailsModel.PlaylistDetail:
+        request_params = {
+            "__call": "playlist.getDetails",
+            "cc": "in",
+            "listid": playlist_id,
+            "_format": "json",
+            "_marker": "0",
+        }
+        async with AsyncClient() as async_client:
+            resp = await async_client.get(self.jio_api_base_url, params=request_params)
+
+        resp: dict = resp.json()
+
+        return PlaylistDetailsModel.PlaylistDetail(**resp)
