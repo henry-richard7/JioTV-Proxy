@@ -1,10 +1,11 @@
-from pydantic import BaseModel, Field, field_validator, ValidationInfo
+from pydantic import BaseModel, Field, field_validator, ValidationInfo, computed_field
 from html import unescape
+from datetime import datetime
 
 
 class Song(BaseModel):
     id: str
-    song: str
+    title: str = Field(..., alias="song")
     album: str
     album_id: str = Field(..., alias="albumid")
     year: str
@@ -35,8 +36,16 @@ class Song(BaseModel):
 class PlaylistDetail(BaseModel):
     id: str = Field(..., alias="listid")
     title: str = Field(..., alias="listname")
+    image: str
     list_count: str
     songs: list[Song]
+    last_updated: int
+
+    @computed_field
+    @property
+    def last_update_string(self) -> str:
+        dt_object = datetime.fromtimestamp(self.last_updated)
+        return dt_object.strftime("%Y-%m-%d %I:%M:%S %p")
 
     @field_validator("*", mode="before")
     def image_resolution_fix(cls, value: str, info: ValidationInfo):
