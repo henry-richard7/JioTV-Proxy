@@ -136,7 +136,9 @@ async def lifespan(app: FastAPI):
     task.cancel()
 
 
-router = APIRouter()
+router = APIRouter(
+    lifespan=lifespan,
+)
 templates = Jinja2Templates(directory="templates/JioTV")
 
 

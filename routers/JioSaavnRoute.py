@@ -1,7 +1,6 @@
 from typing import Union
 
-from fastapi import APIRouter, Request, FastAPI, Depends
-from fastapi.responses import PlainTextResponse, Response
+from fastapi import APIRouter, Depends, Request
 
 from fastapi.templating import Jinja2Templates
 
@@ -17,15 +16,7 @@ from models.JioSaavn import (
 )
 
 router = APIRouter(tags=["Jio Saavn"])
-
-
-@router.get("/api/home")
-async def api_homepage(
-    language: HomeModels.Languages = HomeModels.Languages.Tamil,
-    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
-) -> HomeModels.HomePageResponse:
-    home_page_contents = await jio_saavn.home_page(language)
-    return home_page_contents
+templates = Jinja2Templates(directory="templates/JioSaavn")
 
 
 @router.get("/api/home")
@@ -86,3 +77,52 @@ async def api_playlist_details(
 ) -> PlaylistDetailsModel.PlaylistDetail:
     playlist_detail = await jio_saavn.playlist_details(playlist_id=playlist_id)
     return playlist_detail
+
+
+@router.get("/")
+async def home_ui(
+    request: Request,
+    language: HomeModels.Languages = HomeModels.Languages.Tamil,
+    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+):
+    home_page_contents = await jio_saavn.home_page(language)
+    return templates.TemplateResponse(
+        "home.html",
+        {
+            "request": request,
+            "albums": home_page_contents.new_albums,
+            "language": language,
+        },
+    )
+
+
+@router.get("/album_details")
+async def album_details_ui(
+    request: Request,
+    album_id: str,
+    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+):
+    home_page_contents = await jio_saavn.album_details(album_id=album_id)
+    return templates.TemplateResponse(
+        "Album_Details.html",
+        {
+            "request": request,
+            "album_details": home_page_contents,
+        },
+    )
+
+
+@router.get("/play_song")
+async def album_details_ui(
+    request: Request,
+    song_id: str,
+    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+):
+    home_page_contents = await jio_saavn.song_details(song_id=song_id)
+    return templates.TemplateResponse(
+        "play.html",
+        {
+            "request": request,
+            "song_details": home_page_contents,
+        },
+    )
