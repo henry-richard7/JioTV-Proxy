@@ -30,7 +30,12 @@ class ArtistDetail(BaseModel):
     def image_resolution_fix(cls, value: str, info: ValidationInfo):
         if info.field_name == "image":
             return value.replace("150x150", "500x500")
+
         elif info.field_name == "listeners":
             return value.split(" ")[-2]
-        else:
+
+        elif isinstance(value, str):
             return unescape(value)
+
+        else:
+            return value

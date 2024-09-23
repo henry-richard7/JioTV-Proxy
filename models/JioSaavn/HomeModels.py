@@ -1,5 +1,6 @@
-from pydantic import BaseModel, computed_field, Field
+from pydantic import BaseModel, computed_field, Field, field_validator, ValidationInfo
 from enum import Enum
+from html import unescape
 
 
 class Languages(Enum):
@@ -29,10 +30,26 @@ class Music(BaseModel):
     id: str
     name: str
 
+    @field_validator("*", mode="before")
+    def html_unescape(cls, value: str, info: ValidationInfo):
+        if isinstance(value, str):
+            return unescape(value)
+
+        else:
+            return value
+
 
 class Songs(BaseModel):
     name: str
     image: str
+
+    @field_validator("*", mode="before")
+    def html_unescape(cls, value: str, info: ValidationInfo):
+        if isinstance(value, str):
+            return unescape(value)
+
+        else:
+            return value
 
 
 class ChartItem(BaseModel):
@@ -42,6 +59,14 @@ class ChartItem(BaseModel):
     weight: int
     songs: list[Songs]
     perma_url: str
+
+    @field_validator("*", mode="before")
+    def html_unescape(cls, value: str, info: ValidationInfo):
+        if isinstance(value, str):
+            return unescape(value)
+
+        else:
+            return value
 
 
 class NewAlbumItem(BaseModel):
@@ -60,6 +85,14 @@ class NewAlbumItem(BaseModel):
     def artists(self) -> list[Music]:
         return [Music(**artist) for artist in self.Artist.get("music")]
 
+    @field_validator("*", mode="before")
+    def html_unescape(cls, value: str, info: ValidationInfo):
+        if isinstance(value, str):
+            return unescape(value)
+
+        else:
+            return value
+
 
 class FeaturedPlaylistItem(BaseModel):
     listid: str
@@ -74,6 +107,14 @@ class FeaturedPlaylistItem(BaseModel):
     follower_count: str
     uid: str
     last_updated: int
+
+    @field_validator("*", mode="before")
+    def html_unescape(cls, value: str, info: ValidationInfo):
+        if isinstance(value, str):
+            return unescape(value)
+
+        else:
+            return value
 
 
 class HomePageResponse(BaseModel):

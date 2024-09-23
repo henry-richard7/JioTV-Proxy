@@ -41,8 +41,12 @@ class Song(BaseModel):
     def image_resolution_fix(cls, value: str, info: ValidationInfo):
         if info.field_name == "image":
             return value.replace("150x150", "500x500")
-        else:
+
+        elif isinstance(value, str):
             return unescape(value)
+
+        else:
+            return value
 
 
 class Album(BaseModel):
@@ -57,8 +61,12 @@ class Album(BaseModel):
     def image_resolution_fix(cls, value: str, info: ValidationInfo):
         if info.field_name == "image":
             return value.replace("150x150", "500x500")
-        else:
+
+        elif isinstance(value, str):
             return unescape(value)
+
+        else:
+            return value
 
 
 class Artist(BaseModel):
@@ -70,8 +78,12 @@ class Artist(BaseModel):
     def image_resolution_fix(cls, value: str, info: ValidationInfo):
         if info.field_name == "image":
             return value.replace("50x50", "500x500")
-        else:
+
+        elif isinstance(value, str):
             return unescape(value)
+
+        else:
+            return value
 
 
 class Playlist(BaseModel):
@@ -83,5 +95,9 @@ class Playlist(BaseModel):
     def image_resolution_fix(cls, value: str, info: ValidationInfo):
         if info.field_name == "image":
             return value.replace("150x150", "500x500")
-        else:
+
+        elif isinstance(value, str):
             return unescape(value)
+
+        else:
+            return value

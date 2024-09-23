@@ -24,8 +24,10 @@ class Song(BaseModel):
     def image_resolution_fix(cls, value: str, info: ValidationInfo):
         if info.field_name == "image":
             return value.replace("150x150", "500x500")
-        else:
+        elif isinstance(value, str):
             return unescape(value)
+        else:
+            return value
 
 
 class AlbumDetail(BaseModel):
@@ -47,7 +49,10 @@ class AlbumDetail(BaseModel):
             info.field_name == "primary_artists"
             or info.field_name == "primary_artists_id"
         ):
-            return value.split(", ")
+            if info.field_name == "primary_artists":
+                return [unescape(v) for v in value.split(", ")]
+            else:
+                return value.split(", ")
         else:
             return unescape(value)
 

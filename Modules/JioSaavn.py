@@ -7,6 +7,7 @@ from models.JioSaavn import (
     AlbumDetailsModel,
     SearchModel,
     ArtistDetailsModel,
+    SongDetailsModel,
 )
 
 
@@ -17,11 +18,11 @@ class JioSaavnApi:
         )
         self.jio_api_base_url = "https://www.jiosaavn.com/api.php"
 
-    async def decrypt_url(self, url: str) -> str:
+    def decrypt_url(self, url: str) -> str:
         enc_url = base64.b64decode(url.strip())
 
         dec_url = self.des_cipher.decrypt(enc_url, padmode=PAD_PKCS5).decode("utf-8")
-        dec_url = dec_url.replace("_96.mp4", "_320.mp3")
+        dec_url = dec_url.replace("_96.mp4", "_320.mp4")
         return dec_url
 
     async def home_page(
@@ -118,3 +119,18 @@ class JioSaavnApi:
             ]
 
         return None
+
+    async def song_details(self, song_id):
+        request_params = {
+            "__call": "song.getDetails",
+            "cc": "in",
+            "pids": song_id,
+            "_format": "json",
+            "_marker": "0",
+        }
+        async with AsyncClient() as async_client:
+            resp = await async_client.get(self.jio_api_base_url, params=request_params)
+
+        resp: dict = resp.json()
+
+        return SongDetailsModel.SongDetail(**resp[song_id])
