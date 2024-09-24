@@ -136,7 +136,7 @@
             setTimeout(
                 function () {
                     $.ajax({
-                        url: '/createToken?phone_number=' + phone_number + '&otp=' + passsword,
+                        url: '/jiotv/createToken?phone_number=' + phone_number + '&otp=' + passsword,
                         type: 'GET',
                         async: true,
                         success: function (result) {
@@ -162,7 +162,7 @@
             setTimeout(
                 function () {
                     $.ajax({
-                        url: '/get_otp?phone_no=' + phone_number,
+                        url: '/jiotv/get_otp?phone_no=' + phone_number,
                         type: 'GET',
                         async: true,
                         success: function (result) {
