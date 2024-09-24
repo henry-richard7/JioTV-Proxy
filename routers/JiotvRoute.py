@@ -114,7 +114,7 @@ def clear_creds():
 
 async def jiotv_auth_verify():
     if not path.exists(path.join("data", "jio_headers.json")):
-        raise JiotvUnauthorizedException
+        raise JiotvUnauthorizedException(name="--")
     else:
         pass
 
