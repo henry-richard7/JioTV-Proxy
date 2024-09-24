@@ -26,6 +26,10 @@ def welcome_msg():
     print(f"\tPlease Login at http://{localip}:8000/jiotv/login")
     print(f"\tPlaylist m3u: http://{localip}:8000/jiotv/playlist.m3u")
     print()
+    print("To Access Jio Saavn:")
+    print(f"\tWeb Player: http://{localip}:8000/jio_saavn/")
+    print(f"\tAPI Endpoints: http://{localip}:8000/jio_saavn/api/")
+    print()
 
 
 app = FastAPI()

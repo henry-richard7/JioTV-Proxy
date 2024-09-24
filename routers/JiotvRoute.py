@@ -21,6 +21,9 @@ import logging
 from contextlib import asynccontextmanager
 import asyncio
 
+from scheduler.asyncio import Scheduler
+from datetime import timedelta
+
 logger = logging.getLogger("uvicorn")
 jiotv_obj = JioTV(logger)
 localip = jiotv_obj.get_local_ip()
@@ -117,28 +120,26 @@ async def jiotv_auth_verify():
 
 
 async def background_refresh_token():
-    while True:
-        refreshed_token = await jiotv_obj.refresh_token()
-        if refreshed_token:
-            jiotv_obj.update_headers()
-            logger.info("[*] Session Refreshed.")
+    refreshed_token = await jiotv_obj.refresh_token()
+    if refreshed_token:
+        jiotv_obj.update_headers()
+        logger.info("[*] Session Refreshed.")
 
-            update_expire_time(phone_number=get_phone_number())
-        else:
-            raise JiotvSessionExpiredException
-        await asyncio.sleep(3600)
+        update_expire_time(phone_number=get_phone_number())
+    else:
+        pass
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    task = asyncio.create_task(background_refresh_token())
+    await background_refresh_token()
+    schedule = Scheduler()
+    schedule.cyclic(timedelta(hours=1), background_refresh_token)
     yield
-    task.cancel()
+    schedule.delete_jobs()
 
 
-router = APIRouter(
-    # lifespan=lifespan,
-)
+router = APIRouter(lifespan=lifespan)
 templates = Jinja2Templates(directory="templates/JioTV")
 
 

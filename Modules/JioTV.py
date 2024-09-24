@@ -278,44 +278,43 @@ class JioTV:
             return "[FAILED]"
 
     async def refresh_token(self):
-        with open(path.join("data", "jio_headers.json"), "r") as auth_file:
-            auth_headers = json.load(auth_file)
+        if path.exists(path.join("data", "jio_headers.json")):
+            with open(path.join("data", "jio_headers.json"), "r") as auth_file:
+                auth_headers = json.load(auth_file)
 
-        post_body = {
-            "appName": "RJIL_JioTV",
-            "deviceId": auth_headers["deviceId"],
-            "refreshToken": auth_headers["refresh_token"],
-        }
-        refresh_token_headers = {
-            "accesstoken": auth_headers["accesstoken"],
-            "devicetype": "phone",
-            "versionCode": "315",
-            "os": "android",
-            "Content-Type": "application/json; charset=utf-8",
-            "Host": "auth.media.jio.com",
-            "Accept-Encoding": "gzip",
-            "User-Agent": "okhttp/4.2.2",
-        }
+            post_body = {
+                "appName": "RJIL_JioTV",
+                "deviceId": auth_headers["deviceId"],
+                "refreshToken": auth_headers["refresh_token"],
+            }
+            refresh_token_headers = {
+                "accesstoken": auth_headers["accesstoken"],
+                "devicetype": "phone",
+                "versionCode": "315",
+                "os": "android",
+                "Content-Type": "application/json; charset=utf-8",
+                "Host": "auth.media.jio.com",
+                "Accept-Encoding": "gzip",
+                "User-Agent": "okhttp/4.2.2",
+            }
 
-        # resp = httpx.post(
-        #     REFRESH_TOKEN_URL, headers=refresh_token_headers, json=post_body
-        # ).json()
+            async with httpx.AsyncClient() as async_client:
+                resp = await async_client.post(
+                    REFRESH_TOKEN_URL,
+                    headers=refresh_token_headers,
+                    json=post_body,
+                )
 
-        async with httpx.AsyncClient() as async_client:
-            resp = await async_client.post(
-                REFRESH_TOKEN_URL,
-                headers=refresh_token_headers,
-                json=post_body,
-            )
+            resp = resp.json()
 
-        resp = resp.json()
+            if resp.get("authToken"):
+                auth_headers["accesstoken"] = resp.get("authToken")
+                with open(path.join("data", "jio_headers.json"), "w") as f:
+                    json.dump(auth_headers, f, indent=4)
 
-        if resp.get("authToken"):
-            auth_headers["accesstoken"] = resp.get("authToken")
-            with open(path.join("data", "jio_headers.json"), "w") as f:
-                json.dump(auth_headers, f, indent=4)
-
-            return True
+                return True
+            else:
+                return False
         else:
             return False
 
