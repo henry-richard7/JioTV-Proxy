@@ -134,7 +134,7 @@ async def background_refresh_token():
 async def lifespan(app: FastAPI):
     await background_refresh_token()
     schedule = Scheduler()
-    schedule.cyclic(timedelta(hours=1), background_refresh_token)
+    schedule.cyclic(timedelta(minutes=45), background_refresh_token)
     yield
     schedule.delete_jobs()
 
