@@ -128,6 +128,22 @@ async def album_details_ui(
     )
 
 
+@router.get("/artists_details")
+async def album_details_ui(
+    request: Request,
+    artist_id: str,
+    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+):
+    home_page_contents = await jio_saavn.artist_details(artist_id=artist_id)
+    return templates.TemplateResponse(
+        "artists_details.html",
+        {
+            "request": request,
+            "artists_details": home_page_contents,
+        },
+    )
+
+
 @router.get("/play_song")
 async def album_details_ui(
     request: Request,

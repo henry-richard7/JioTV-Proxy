@@ -24,9 +24,11 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
-    <title>Results for {{ songName }}</title>
+
+    <title>{{ artists_details.title }}</title>
   </head>
   <body>
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container-fluid">
         <a class="navbar-brand" href="#">JioSaavn</a>
@@ -117,6 +119,8 @@
         </div>
       </div>
     </nav>
+
+    <!-- Search Panel -->
     <div class="search-panel container-fluid pt-2 shadow">
       <div class="input-group mb-3">
         <input
@@ -228,63 +232,115 @@
         </div>
       </div>
     </div>
-    <h1 class="text-center">Search Results for {{ query }}</h1>
-    <div class="search-results">
-      <div class="container-fluid">
-        <div class="row">
-          {% for result in results %}
-          <div class="col-6 col-md-3 pt-1">
-            <div class="card">
-              <img
-                class="card-img-top"
-                src="{{ result.image }}"
-                alt="Card image cap"
-                draggable="false"
-              />
-              <div class="card-body">
-                <h5 class="card-title text-truncate">
-                  {{ result.title|safe }}
-                </h5>
-                <p class="card-text fw-bold text-muted text-truncate">
-                  {{ result.year }}
-                </p>
-                {% if mode == "SONGS" %}
-                <a
-                  href="/jio_saavn/play_song?song_id={{ result.id }}"
-                  class="btn btn-secondary container-fluid"
-                >
-                  <i class="fas fa-music"></i>
-                  Listen
-                </a>
-                {% elif mode == "ALBUMS" %}
-                <a
-                  href="/jio_saavn/album_details?album_id={{ result.id }}"
-                  class="btn btn-secondary container-fluid"
-                >
-                  <i class="fas fa-music"></i>
-                  Show Details
-                </a>
-                {% elif mode == "ARTISTS" %}
-                <a
-                  href="/jio_saavn/artists_details?artist_id={{ result.id }}"
-                  class="btn btn-secondary container-fluid"
-                >
-                  <i class="fas fa-music"></i>
-                  Show Details
-                </a>
-                {% elif mode == "PLAYLISTS" %}
-                <a
-                  href="/jio_saavn/playlists_details?playlist_id={{ result.id }}"
-                  class="btn btn-secondary container-fluid"
-                >
-                  <i class="fas fa-music"></i>
-                  Show Details
-                </a>
-                {% endif %}
-              </div>
-            </div>
+
+    <!-- Main Content -->
+    <div class="container-fluid">
+      <!-- Artist Details -->
+      <div class="row justify-content-between pt-2">
+        <div class="col-md-6">
+          <img
+            src="{{ artists_details.image }}"
+            alt=""
+            class="img-fluid img-thumbnail"
+            draggable="false"
+          />
+        </div>
+        <div class="col-md-6 fs-4">
+          <div class="album-text pt-2">
+            <h2 class="fw-bold">{{ artists_details.title }}</h2>
+            <h4 class="fw-bold">
+              Total Followers:
+              <span class="text-muted fs-5"
+                >{{artists_details.follower_count}}</span
+              >
+            </h4>
+
+            <h4 class="fw-bold">
+              Total Listeners:
+              <span class="text-muted fs-5">{{artists_details.listeners}}</span>
+            </h4>
           </div>
-          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Nav Tabs -->
+      <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <a
+            class="nav-link active"
+            id="top-songs-tab"
+            data-bs-toggle="tab"
+            href="#top-songs"
+            role="tab"
+            aria-controls="top-songs"
+            aria-selected="true"
+          >
+            Top Songs
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a
+            class="nav-link"
+            id="top-albums-tab"
+            data-bs-toggle="tab"
+            href="#top-albums"
+            role="tab"
+            aria-controls="top-albums"
+            aria-selected="false"
+          >
+            Top Albums
+          </a>
+        </li>
+      </ul>
+
+      <!-- Tab Content -->
+      <div class="tab-content" id="myTabContent">
+        <!-- Top Songs Tab Pane -->
+        <div
+          class="tab-pane fade show active"
+          id="top-songs"
+          role="tabpanel"
+          aria-labelledby="top-songs-tab"
+        >
+          <ol class="list-group list-group-numbered">
+            {% for song in artists_details.top_songs.songs %}
+            <li
+              class="list-group-item d-flex justify-content-between align-items-start"
+            >
+              <div class="ms-2 me-auto">
+                <div class="fw-bold">{{ song.title }}</div>
+                {{ song.more_info.artist }}
+              </div>
+              <a href="/jio_saavn/play_song?song_id={{ song.id }}">
+                <span class="fa-solid fa-play fs-3"></span>
+              </a>
+            </li>
+            {% endfor %}
+          </ol>
+        </div>
+
+        <!-- Top Albums Tab Pane -->
+        <div
+          class="tab-pane fade"
+          id="top-albums"
+          role="tabpanel"
+          aria-labelledby="top-albums-tab"
+        >
+          <ol class="list-group list-group-numbered">
+            {% for album in artists_details.top_albums.albums %}
+            <li
+              class="list-group-item d-flex justify-content-between align-items-start"
+            >
+              <div class="ms-2 me-auto">
+                <div class="fw-bold">{{ album.title }}</div>
+                {{ album.year }}
+              </div>
+              <a href="/jio_saavn/album_details?album_id={{ album.id }}">
+                <span class="fa-solid fa-play fs-3"></span>
+              </a>
+            </li>
+            {% endfor %}
+          </ol>
         </div>
       </div>
     </div>

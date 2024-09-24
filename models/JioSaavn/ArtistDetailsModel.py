@@ -19,7 +19,7 @@ class TopAlbums(BaseModel):
 
 class ArtistDetail(BaseModel):
     artist_id: str = Field(..., alias="artistId")
-    name: str
+    title: str = Field(..., alias="name")
     image: str
     listeners: str = Field(..., alias="subtitle")
     follower_count: str
