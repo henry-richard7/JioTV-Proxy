@@ -1,5 +1,4 @@
 import uvicorn
-import multiprocessing
 
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
@@ -13,6 +12,8 @@ from models.JioTV.ExceptionModels import (
 
 from Modules.JioTV import JioTV
 import logging
+
+import winuvloop
 
 logger = logging.getLogger("uvicorn")
 jiotv_obj = JioTV(logger)
@@ -69,8 +70,7 @@ app.include_router(JioSaavnRoute.router, prefix="/jio_saavn")
 
 
 if __name__ == "__main__":
-    # This is required for windows.
-    multiprocessing.freeze_support()
-
     welcome_msg()
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="warning")
+    config = uvicorn.Config(app=app, host="0.0.0.0", port=8000, log_level="warning")
+    server = uvicorn.Server(config)
+    winuvloop.run(server.serve())

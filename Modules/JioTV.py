@@ -336,7 +336,10 @@ class JioTV:
         headers["cookie"] = cookie
         headers["Content-type"] = "application/octet-stream"
 
-        resp = await httpx.AsyncClient().get(uri, headers=headers, timeout=None)
+        resp = await httpx.AsyncClient().get(
+            uri,
+            headers=headers,
+        )
         resp = resp.content
 
         return resp
@@ -358,7 +361,10 @@ class JioTV:
         headers["srno"] = "240707144000"
         headers["cookie"] = cookie
 
-        resp = await httpx.AsyncClient().get(uri, headers=headers, timeout=None)
+        resp = await httpx.AsyncClient().get(
+            uri,
+            headers=headers,
+        )
         return resp.content
 
     async def get_audio(self, uri, cid, cookie):
@@ -444,7 +450,9 @@ class JioTV:
         """
         rjson = {"channel_id": int(channel_id), "stream_type": "Seek"}
         resp = await httpx.AsyncClient().post(
-            GET_CHANNEL_URL, headers=self.channel_headers, data=rjson, timeout=None
+            GET_CHANNEL_URL,
+            headers=self.channel_headers,
+            data=rjson,
         )
 
         resp = resp.json()
@@ -504,7 +512,10 @@ class JioTV:
         headers["srno"] = "240707144000"
         headers["cookie"] = cookie
 
-        resp = await httpx.AsyncClient().get(uri, headers=headers, timeout=None)
+        resp = await httpx.AsyncClient().get(
+            uri,
+            headers=headers,
+        )
         resp = resp.text
 
         parsed_m3u8 = m3u8.loads(resp)
