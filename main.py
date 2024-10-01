@@ -13,7 +13,7 @@ from models.JioTV.ExceptionModels import (
 from Modules.JioTV import JioTV
 import logging
 
-import winuvloop
+from sys import platform as current_platform
 
 logger = logging.getLogger("uvicorn")
 jiotv_obj = JioTV(logger)
@@ -73,4 +73,12 @@ if __name__ == "__main__":
     welcome_msg()
     config = uvicorn.Config(app=app, host="0.0.0.0", port=8000, log_level="warning")
     server = uvicorn.Server(config)
-    winuvloop.run(server.serve())
+
+    if current_platform in ("win32", "cygwin", "cli"):
+        import winloop
+
+        winloop.run(server.serve())
+    else:
+        import uvloop  # type: ignore For UNIX based systems
+
+        uvloop.run(server.serve())
