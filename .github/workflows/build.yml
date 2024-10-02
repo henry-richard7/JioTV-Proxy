@@ -22,7 +22,7 @@ jobs:
           - os: windows-latest
             TARGET: windows
             CMD_BUILD: >
-              nuitka --windows-icon-from-ico=resources\JioTV_logo.ico --onefile main.py --output-dir=output --output-filename="JioTV.exe" --remove-output --disable-ccache &&
+              nuitka --windows-icon-from-ico=resources\JioTV_logo.ico --onefile main.py --output-dir=output --output-filename="JioTV.exe" --remove-output --disable-ccache --follow-imports &&
               cp -r templates output &&
               cp -r data output &&
               cp -r static output &&
@@ -57,6 +57,6 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/${{matrix.OUT_FILE_NAME}}
+          files: output/${{matrix.OUT_FILE_NAME}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
