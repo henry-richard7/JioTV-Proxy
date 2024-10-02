@@ -12,7 +12,7 @@ jobs:
           - os: macos-latest
             TARGET: macos
             CMD_BUILD: >
-              nuitka --onefile main.py --output-dir=output --output-filename="JioTV" --remove-output &&
+              nuitka --onefile main.py --output-dir=output --output-filename="JioTV" --remove-output --disable-ccache &&
               cp -r templates output &&
               cp -r data output &&
               cp -r static output &&
@@ -22,7 +22,7 @@ jobs:
           - os: windows-latest
             TARGET: windows
             CMD_BUILD: >
-              nuitka --windows-icon-from-ico=resources\JioTV_logo.ico --onefile main.py --output-dir=output --output-filename="JioTV.exe" --remove-output &&
+              nuitka --windows-icon-from-ico=resources\JioTV_logo.ico --onefile main.py --output-dir=output --output-filename="JioTV.exe" --remove-output --disable-ccache &&
               cp -r templates output &&
               cp -r data output &&
               cp -r static output &&
@@ -33,7 +33,7 @@ jobs:
           - os: ubuntu-latest
             TARGET: linux
             CMD_BUILD: >
-              nuitka --onefile main.py --output-dir=output --output-filename="JioTV" --remove-output &&
+              nuitka --onefile main.py --output-dir=output --output-filename="JioTV" --remove-output --disable-ccache &&
               cp -r templates output &&
               cp -r data output &&
               cp -r static output &&
