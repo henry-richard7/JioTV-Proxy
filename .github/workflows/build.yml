@@ -22,7 +22,7 @@ jobs:
           - os: windows-latest
             TARGET: windows
             CMD_BUILD: >
-              nuitka --windows-icon-from-ico=resources\JioTV_logo.ico --onefile main.py --output-dir=output --output-filename="JioTV.exe" --remove-output --disable-ccache --follow-imports &&
+              nuitka --windows-icon-from-ico=resources\JioTV_logo.ico --onefile main.py --output-dir=output --output-filename="JioTV.exe" --remove-output --disable-ccache --follow-imports --assume-yes-for-downloads &&
               cp -r templates output &&
               cp -r data output &&
               cp -r static output &&
