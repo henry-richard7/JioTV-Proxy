@@ -1,11 +1,11 @@
-import hashlib
-import time
-import random
+from hashlib import sha1
+from time import time
+from random import randint
 
 import m3u8
-import socket
+from socket import socket, AF_INET, SOCK_DGRAM
 import json
-import httpx
+from httpx import post, AsyncClient
 from os import path
 from base64 import b64encode
 
@@ -30,9 +30,7 @@ REFRESH_TOKEN_URL = (
 # ---------------------
 
 
-android_id = hashlib.sha1(f"{time.time()}{random.randint(0, 99)}".encode()).hexdigest()[
-    :16
-]
+android_id = sha1(f"{time()}{randint(0, 99)}".encode()).hexdigest()[:16]
 
 
 class JioTV:
@@ -141,7 +139,7 @@ class JioTV:
             str: The local IP address of the machine.
         """
 
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s = socket(AF_INET, SOCK_DGRAM)
         s.settimeout(0)
         try:
             s.connect(("8.8.8.8", 80))
@@ -165,7 +163,7 @@ class JioTV:
         None
         """
 
-        response = await httpx.AsyncClient().get(
+        response = await AsyncClient().get(
             CHANNELS_SRC_NEW, headers=self.channel_headers
         )
         response = response.json()["result"]
@@ -190,7 +188,7 @@ class JioTV:
             "user-agent": "okhttp/3.14.9",
         }
 
-        resp = httpx.post(url=url, json=json_body, headers=headers)
+        resp = post(url=url, json=json_body, headers=headers)
 
         if resp.status_code == 204:
             return "[SUCCESS]"
@@ -236,7 +234,7 @@ class JioTV:
             },
         }
 
-        resp = httpx.post(url=url, json=json_body, headers=headers).json()
+        resp = post(url=url, json=json_body, headers=headers).json()
 
         if resp.get("ssoToken", "") != "":
             _CREDS = {
@@ -298,7 +296,7 @@ class JioTV:
                 "User-Agent": "okhttp/4.2.2",
             }
 
-            async with httpx.AsyncClient() as async_client:
+            async with AsyncClient() as async_client:
                 resp = await async_client.post(
                     REFRESH_TOKEN_URL,
                     headers=refresh_token_headers,
@@ -336,7 +334,7 @@ class JioTV:
         headers["cookie"] = cookie
         headers["Content-type"] = "application/octet-stream"
 
-        resp = await httpx.AsyncClient().get(
+        resp = await AsyncClient().get(
             uri,
             headers=headers,
         )
@@ -361,7 +359,7 @@ class JioTV:
         headers["srno"] = "240707144000"
         headers["cookie"] = cookie
 
-        resp = await httpx.AsyncClient().get(
+        resp = await AsyncClient().get(
             uri,
             headers=headers,
         )
@@ -449,7 +447,7 @@ class JioTV:
             None: Does not raise any exceptions.
         """
         rjson = {"channel_id": int(channel_id), "stream_type": "Seek"}
-        resp = await httpx.AsyncClient().post(
+        resp = await AsyncClient().post(
             GET_CHANNEL_URL,
             headers=self.channel_headers,
             data=rjson,
@@ -463,9 +461,7 @@ class JioTV:
         base_url = "/".join(base_url)
 
         cookie = "__hdnea__" + resp.get("result", "").split("__hdnea__")[-1]
-        first_m3u8 = await httpx.AsyncClient().get(
-            onlyUrl, headers=self.channel_headers
-        )
+        first_m3u8 = await AsyncClient().get(onlyUrl, headers=self.channel_headers)
         first_m3u8 = first_m3u8.text
 
         firast_m3u8_parsed = m3u8.loads(first_m3u8)
@@ -512,7 +508,7 @@ class JioTV:
         headers["srno"] = "240707144000"
         headers["cookie"] = cookie
 
-        resp = await httpx.AsyncClient().get(
+        resp = await AsyncClient().get(
             uri,
             headers=headers,
         )
@@ -541,7 +537,7 @@ class JioTV:
         return temp_text
 
     async def get_playlists(self, host):
-        response = await httpx.AsyncClient().get(
+        response = await AsyncClient().get(
             CHANNELS_SRC_NEW, headers=self.channel_headers
         )
         response = response.json()
