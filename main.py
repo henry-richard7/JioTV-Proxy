@@ -77,8 +77,10 @@ if __name__ == "__main__":
     if current_platform in ("win32", "cygwin", "cli"):
         import winloop
 
+        winloop.install()
         winloop.run(server.serve())
     else:
         import uvloop  # type: ignore For UNIX based systems
 
+        uvloop.install()
         uvloop.run(server.serve())

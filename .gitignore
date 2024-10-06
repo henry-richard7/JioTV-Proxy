@@ -16,3 +16,4 @@ data/jio_headers.json
 Modules/__pycache__/
 __pycache__
 output
+*.ipynb
