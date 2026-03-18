@@ -144,6 +144,7 @@ async def lifespan(app: FastAPI):
         )
         db.commit()
         db.close()
+
     await asyncio.to_thread(init_db)
 
     await background_refresh_token()
@@ -153,6 +154,7 @@ async def lifespan(app: FastAPI):
     schedule.delete_jobs()
     await jiotv_obj.client.aclose()
     from routers.JioSaavnRoute import jio_saavn_api
+
     await jio_saavn_api.client.aclose()
 
 
@@ -211,8 +213,10 @@ async def createToken(phone_number, otp):
     """
     if path.exists(path.join("creds.db")):
         logger.warning("[!] Creds already available. Clearing existing creds.")
+
         async def _clear():
             clear_creds()
+
         await asyncio.to_thread(_clear)
 
     else:
@@ -220,8 +224,10 @@ async def createToken(phone_number, otp):
 
     login_response = await jiotv_obj.login(phone_number, otp)
     if login_response == "[SUCCESS]":
+
         async def _store():
             store_creds(phone_number)
+
         await asyncio.to_thread(_store)
         jiotv_obj.update_headers()
         return login_response
@@ -273,6 +279,7 @@ async def get_m3u8(
     - The m3u8 playlist for the specified channel. (type: PlainTextResponse)
     """
     channel_response = await jiotv_obj.get_channel_url(cid)
+    print(channel_response)
     return PlainTextResponse(channel_response, media_type="application/x-mpegurl")
 
 
@@ -295,6 +302,9 @@ async def get_multi_audio(
     - Response: The response object containing the audio.
     """
     audio_response = await jiotv_obj.get_audio(uri, cid, cookie)
+    print("[+] Fetching Audio chunk...")
+    print(audio_response)
+    print("[+] Audio chunk... fetched.")
     return Response(audio_response, media_type="application/x-mpegurl")
 
 
@@ -318,6 +328,7 @@ async def get_subtitles(
 
     """
     subs_response = await jiotv_obj.get_subs(uri, cid, cookie)
+    print(subs_response)
     return Response(subs_response)
 
 
@@ -329,6 +340,7 @@ async def get_vtt_(
     auth_session=Depends(jiotv_auth_verify),
 ):
     resp = await jiotv_obj.get_vtt(uri, cid, cookie)
+    print(resp)
     return PlainTextResponse(resp, media_type="text/vtt")
 
 
@@ -346,7 +358,14 @@ async def get_tts(
 
     req = jiotv_obj.client.build_request("GET", uri, headers=headers)
     resp = await jiotv_obj.client.send(req, stream=True)
-    return StreamingResponse(resp.aiter_bytes(), media_type="video/MP2T", background=BackgroundTask(resp.aclose))
+    print("[+] Fetching TS chunk...")
+    print(resp)
+    print("[+] TS chunk... fetched.")
+    return StreamingResponse(
+        resp.aiter_bytes(),
+        media_type="video/MP2T",
+        background=BackgroundTask(resp.aclose),
+    )
 
 
 @router.get("/get_key")
@@ -364,7 +383,14 @@ async def get_keys(
 
     req = jiotv_obj.client.build_request("GET", uri, headers=headers)
     resp = await jiotv_obj.client.send(req, stream=True)
-    return StreamingResponse(resp.aiter_bytes(), media_type="application/octet-stream", background=BackgroundTask(resp.aclose))
+    print("[+] Fetching Key chunk...")
+    print(resp)
+    print("[+] Key chunk... fetched.")
+    return StreamingResponse(
+        resp.aiter_bytes(),
+        media_type="application/octet-stream",
+        background=BackgroundTask(resp.aclose),
+    )
 
 
 @router.get("/play")

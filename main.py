@@ -36,12 +36,12 @@ def welcome_msg():
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    logger.info(f"Incoming request: {request.method} {request.url}")
-    response = await call_next(request)
-    logger.info(f"Completed request: {request.method} {request.url} - Status Code: {response.status_code}")
-    return response
+# @app.middleware("http")
+# async def log_requests(request: Request, call_next):
+#     logger.info(f"Incoming request: {request.method} {request.url}")
+#     response = await call_next(request)
+#     logger.info(f"Completed request: {request.method} {request.url} - Status Code: {response.status_code}")
+#     return response
 
 
 @app.exception_handler(JiotvUnauthorizedException)

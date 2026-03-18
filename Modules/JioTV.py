@@ -20,7 +20,7 @@ FEATURED_SRC = (
     "https://tv.media.jio.com/apis/v1.6/getdata/featurednew?start=0&limit=30&langId=6"
 )
 CHANNELS_SRC_NEW = "https://jiotv.data.cdn.jio.com/apis/v3.0/getMobileChannelList/get/?os=android&devicetype=phone&usertype=tvYR7NSNn7rymo3F&version=285"
-GET_CHANNEL_URL = "https://jiotvapi.media.jio.com/playback/apis/v1/geturl?langId=6"
+GET_CHANNEL_URL = "https://jiotvapi.media.jio.com/playback/apis/v1.1/geturl?langId=6"
 CATCHUP_SRC = "https://jiotv.data.cdn.jio.com/apis/v1.3/getepg/get?offset={0}&channel_id={1}&langId=6"
 M3U_CHANNEL = '\n#EXTINF:0 tvg-id="{tvg_id}" tvg-name="{channel_name}" group-title="{group_title}" tvg-chno="{tvg_chno}" tvg-logo="{tvg_logo}"{catchup},{channel_name}\n{play_url}'
 DICTIONARY_URL = "https://jiotvapi.cdn.jio.com/apis/v1.3/dictionary/dictionary?langId=6"
@@ -40,7 +40,8 @@ class JioTV:
         self.channel_headers = {}
         self.request_headers = {}
         self.client = AsyncClient(
-            limits=Limits(max_keepalive_connections=50, max_connections=100)
+            limits=Limits(max_keepalive_connections=50, max_connections=100),
+            timeout=None
         )
 
         self._cached_m3u8 = None
@@ -319,6 +320,10 @@ class JioTV:
 
             if resp.get("authToken"):
                 auth_headers["accesstoken"] = resp.get("authToken")
+                if resp.get("ssoToken"):
+                    auth_headers["ssotoken"] = resp.get("ssoToken")
+                if resp.get("refreshToken"):
+                    auth_headers["refresh_token"] = resp.get("refreshToken")
 
                 def _write():
                     with open(path.join("data", "jio_headers.json"), "w") as f:
@@ -344,7 +349,7 @@ class JioTV:
         Returns:
             bytes: The retrieved key as bytes.
         """
-        headers = self.request_headers
+        headers = self.request_headers.copy()
         headers["channelid"] = str(cid)
         headers["srno"] = "240707144000"
         headers["cookie"] = cookie
@@ -370,7 +375,7 @@ class JioTV:
         Returns:
             bytes: The response content.
         """
-        headers = self.request_headers
+        headers = self.request_headers.copy()
         headers["channelid"] = str(cid)
         headers["srno"] = "240707144000"
         headers["cookie"] = cookie
@@ -470,7 +475,11 @@ class JioTV:
         )
 
         resp = resp.json()
+        print("[+] Channel URL response received.")
+        print(resp)
+        print("[-] Channel URL response end")
         onlyUrl = resp.get("bitrates", "").get("high", "")
+        print(f"[+] Only URL: {onlyUrl}")
 
         base_url = onlyUrl.split("?")[0].split("/")
         base_url.pop()
@@ -478,7 +487,13 @@ class JioTV:
 
         cookie = "__hdnea__" + resp.get("result", "").split("__hdnea__")[-1]
         first_m3u8 = await self.client.get(onlyUrl, headers=self.channel_headers)
+        print("[*] Channel headers")
+        print(self.channel_headers)
+        print("[-] Channel headers end")
+        print("[+] Fetching first m3u8...")
         first_m3u8 = first_m3u8.text
+        print(first_m3u8)
+        print("[+] First m3u8 fetched.")
 
         firast_m3u8_parsed = m3u8.loads(first_m3u8)
 
@@ -519,7 +534,7 @@ class JioTV:
         Raises:
             None
         """
-        headers = self.request_headers
+        headers = self.request_headers.copy()
         headers["channelid"] = str(cid)
         headers["srno"] = "240707144000"
         headers["cookie"] = cookie
