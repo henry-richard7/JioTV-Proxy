@@ -18,11 +18,16 @@ from models.JioSaavn import (
 router = APIRouter(tags=["Jio Saavn"])
 templates = Jinja2Templates(directory="templates/JioSaavn")
 
+jio_saavn_api = JioSaavnApi()
+
+def get_jiosaavn():
+    return jio_saavn_api
+
 
 @router.get("/api/home")
 async def api_homepage(
     language: HomeModels.Languages = HomeModels.Languages.Tamil,
-    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+    jio_saavn: JioSaavnApi = Depends(get_jiosaavn),
 ) -> HomeModels.HomePageResponse:
     home_page_contents = await jio_saavn.home_page(language)
     return home_page_contents
@@ -32,7 +37,7 @@ async def api_homepage(
 async def api_search(
     query: str,
     search_mode: SearchModel.SearchModes = SearchModel.SearchModes.SONGS,
-    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+    jio_saavn: JioSaavnApi = Depends(get_jiosaavn),
 ) -> Union[
     list[SearchModel.Song],
     list[SearchModel.Album],
@@ -46,7 +51,7 @@ async def api_search(
 @router.get("/api/song_details")
 async def api_song_details(
     song_id: str,
-    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+    jio_saavn: JioSaavnApi = Depends(get_jiosaavn),
 ) -> SongDetailsModel.SongDetail:
     song_detail = await jio_saavn.song_details(song_id=song_id)
     return song_detail
@@ -55,7 +60,7 @@ async def api_song_details(
 @router.get("/api/album_details")
 async def api_album_details(
     album_id: str,
-    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+    jio_saavn: JioSaavnApi = Depends(get_jiosaavn),
 ) -> AlbumDetailsModel.AlbumDetails:
     album_detail = await jio_saavn.album_details(album_id=album_id)
     return album_detail
@@ -64,7 +69,7 @@ async def api_album_details(
 @router.get("/api/artist_details")
 async def api_artist_details(
     artists_id: str,
-    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+    jio_saavn: JioSaavnApi = Depends(get_jiosaavn),
 ) -> ArtistDetailsModel.ArtistDetail:
     artist_detail = await jio_saavn.artist_details(artist_id=artists_id)
     return artist_detail
@@ -73,7 +78,7 @@ async def api_artist_details(
 @router.get("/api/playlist_details")
 async def api_playlist_details(
     playlist_id: str,
-    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+    jio_saavn: JioSaavnApi = Depends(get_jiosaavn),
 ) -> PlaylistDetailsModel.PlaylistDetail:
     playlist_detail = await jio_saavn.playlist_details(playlist_id=playlist_id)
     return playlist_detail
@@ -83,7 +88,7 @@ async def api_playlist_details(
 async def home_ui(
     request: Request,
     language: HomeModels.Languages = HomeModels.Languages.Tamil,
-    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+    jio_saavn: JioSaavnApi = Depends(get_jiosaavn),
 ):
     home_page_contents = await jio_saavn.home_page(language)
     return templates.TemplateResponse(
@@ -100,7 +105,7 @@ async def home_ui(
 async def album_details_ui(
     request: Request,
     album_id: str,
-    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+    jio_saavn: JioSaavnApi = Depends(get_jiosaavn),
 ):
     home_page_contents = await jio_saavn.album_details(album_id=album_id)
     return templates.TemplateResponse(
@@ -116,7 +121,7 @@ async def album_details_ui(
 async def album_details_ui(
     request: Request,
     playlist_id: str,
-    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+    jio_saavn: JioSaavnApi = Depends(get_jiosaavn),
 ):
     home_page_contents = await jio_saavn.playlist_details(playlist_id=playlist_id)
     return templates.TemplateResponse(
@@ -132,7 +137,7 @@ async def album_details_ui(
 async def album_details_ui(
     request: Request,
     artist_id: str,
-    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+    jio_saavn: JioSaavnApi = Depends(get_jiosaavn),
 ):
     home_page_contents = await jio_saavn.artist_details(artist_id=artist_id)
     return templates.TemplateResponse(
@@ -148,7 +153,7 @@ async def album_details_ui(
 async def album_details_ui(
     request: Request,
     song_id: str,
-    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+    jio_saavn: JioSaavnApi = Depends(get_jiosaavn),
 ):
     home_page_contents = await jio_saavn.song_details(song_id=song_id)
     return templates.TemplateResponse(
@@ -165,7 +170,7 @@ async def search_ui(
     request: Request,
     query: str,
     search_mode: SearchModel.SearchModes = SearchModel.SearchModes.SONGS,
-    jio_saavn: JioSaavnApi = Depends(JioSaavnApi),
+    jio_saavn: JioSaavnApi = Depends(get_jiosaavn),
 ):
     home_page_contents = await jio_saavn.search(query=query, search_mode=search_mode)
     return templates.TemplateResponse(

@@ -1,7 +1,8 @@
 from typing import Optional
 
 from fastapi import APIRouter, Request, Depends, FastAPI
-from fastapi.responses import PlainTextResponse, Response
+from fastapi.responses import PlainTextResponse, Response, StreamingResponse
+from starlette.background import BackgroundTask
 
 from fastapi.templating import Jinja2Templates
 
@@ -90,18 +91,18 @@ def get_expire():
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
     cursor.execute("""SELECT expire FROM creds""")
-    expire_time = cursor.fetchone()[0]
+    row = cursor.fetchone()
     db.close()
-    return expire_time
+    return row[0] if row else 0
 
 
 def get_phone_number():
     db = sqlite3.connect("creds.db")
     cursor = db.cursor()
     cursor.execute("""SELECT phone_number FROM creds""")
-    phone_number = cursor.fetchone()[0]
+    row = cursor.fetchone()
     db.close()
-    return phone_number
+    return row[0] if row else ""
 
 
 def clear_creds():
@@ -132,11 +133,27 @@ async def background_refresh_token():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    def init_db():
+        db = sqlite3.connect("creds.db")
+        cursor = db.cursor()
+        cursor.execute(
+            """CREATE TABLE IF NOT EXISTS creds(
+            phone_number TEXT,
+            expire NUMERIC
+        )"""
+        )
+        db.commit()
+        db.close()
+    await asyncio.to_thread(init_db)
+
     await background_refresh_token()
     schedule = Scheduler()
     schedule.cyclic(timedelta(minutes=45), background_refresh_token)
     yield
     schedule.delete_jobs()
+    await jiotv_obj.client.aclose()
+    from routers.JioSaavnRoute import jio_saavn_api
+    await jio_saavn_api.client.aclose()
 
 
 router = APIRouter(lifespan=lifespan)
@@ -175,12 +192,12 @@ async def player(
 
 
 @router.get("/get_otp")
-def get_otp(phone_no):
-    return jiotv_obj.sendOTP(phone_no.replace("+91", ""))
+async def get_otp(phone_no):
+    return await jiotv_obj.sendOTP(phone_no.replace("+91", ""))
 
 
 @router.get("/createToken")
-def createToken(phone_number, otp):
+async def createToken(phone_number, otp):
     phone_number = phone_number.replace("+91", "")
     """
     A function that creates a token for the given phone_number and otp.
@@ -194,14 +211,18 @@ def createToken(phone_number, otp):
     """
     if path.exists(path.join("creds.db")):
         logger.warning("[!] Creds already available. Clearing existing creds.")
-        clear_creds()
+        async def _clear():
+            clear_creds()
+        await asyncio.to_thread(_clear)
 
     else:
         logger.info("[-] First Time Logging in.")
 
-    login_response = jiotv_obj.login(phone_number, otp)
+    login_response = await jiotv_obj.login(phone_number, otp)
     if login_response == "[SUCCESS]":
-        store_creds(phone_number)
+        async def _store():
+            store_creds(phone_number)
+        await asyncio.to_thread(_store)
         jiotv_obj.update_headers()
         return login_response
 
@@ -318,19 +339,14 @@ async def get_tts(
     cookie,
     auth_session=Depends(jiotv_auth_verify),
 ):
-    """
-    A function that handles GET requests to the "/get_ts" endpoint.
+    headers = jiotv_obj.request_headers.copy()
+    headers["channelid"] = str(cid)
+    headers["srno"] = "240707144000"
+    headers["cookie"] = cookie
 
-    Parameters:
-    - uri (str): The URI for the request.
-    - cid (str): The CID for the request.
-    - cookie (str): The cookie for the request.
-
-    Returns:
-    - Response: Gets the segments from the specified URI.
-    """
-    tts_response = await jiotv_obj.get_ts(uri, cid, cookie)
-    return Response(tts_response, media_type="video/MP2T")
+    req = jiotv_obj.client.build_request("GET", uri, headers=headers)
+    resp = await jiotv_obj.client.send(req, stream=True)
+    return StreamingResponse(resp.aiter_bytes(), media_type="video/MP2T", background=BackgroundTask(resp.aclose))
 
 
 @router.get("/get_key")
@@ -340,19 +356,15 @@ async def get_keys(
     cookie,
     auth_session=Depends(jiotv_auth_verify),
 ):
-    """
-    Retrieves a key from the specified URI using the provided CID and cookie.
+    headers = jiotv_obj.request_headers.copy()
+    headers["channelid"] = str(cid)
+    headers["srno"] = "240707144000"
+    headers["cookie"] = cookie
+    headers["Content-type"] = "application/octet-stream"
 
-    Parameters:
-    - uri (str): The URI from which to retrieve the key.
-    - cid (str): The CID associated with the key.
-    - cookie (str): The cookie to use for authentication.
-
-    Returns:
-    - Response: The response containing the DRM key.
-    """
-    key_response = await jiotv_obj.get_key(uri, cid, cookie)
-    return Response(key_response, media_type="application/octet-stream")
+    req = jiotv_obj.client.build_request("GET", uri, headers=headers)
+    resp = await jiotv_obj.client.send(req, stream=True)
+    return StreamingResponse(resp.aiter_bytes(), media_type="application/octet-stream", background=BackgroundTask(resp.aclose))
 
 
 @router.get("/play")

@@ -1,5 +1,5 @@
 from typing import Union
-from httpx import AsyncClient
+from httpx import AsyncClient, Limits
 import base64
 from pyDes import des, ECB, PAD_PKCS5
 from models.JioSaavn import (
@@ -18,6 +18,7 @@ class JioSaavnApi:
             b"38346591", ECB, b"\0\0\0\0\0\0\0\0", pad=None, padmode=PAD_PKCS5
         )
         self.jio_api_base_url = "https://www.jiosaavn.com/api.php"
+        self.client = AsyncClient(limits=Limits(max_keepalive_connections=20, max_connections=50))
 
     def decrypt_url(self, url: str) -> str:
         enc_url = base64.b64decode(url.strip())
@@ -32,10 +33,9 @@ class JioSaavnApi:
         cookies = {"L": language.value}
 
         request_params = {"__call": "content.getHomepageData"}
-        async with AsyncClient() as async_client:
-            resp = await async_client.get(
-                self.jio_api_base_url, cookies=cookies, params=request_params
-            )
+        resp = await self.client.get(
+            self.jio_api_base_url, cookies=cookies, params=request_params
+        )
 
         resp = resp.json()
 
@@ -58,8 +58,7 @@ class JioSaavnApi:
             "__call": "content.getAlbumDetails",
             "albumid": album_id,
         }
-        async with AsyncClient() as async_client:
-            resp = await async_client.get(self.jio_api_base_url, params=request_params)
+        resp = await self.client.get(self.jio_api_base_url, params=request_params)
 
         resp = resp.json()
 
@@ -79,8 +78,7 @@ class JioSaavnApi:
             "sortOrder": "desc",
             "artistId": artist_id,
         }
-        async with AsyncClient() as async_client:
-            resp = await async_client.get(self.jio_api_base_url, params=request_params)
+        resp = await self.client.get(self.jio_api_base_url, params=request_params)
 
         resp: dict = resp.json()
         return ArtistDetailsModel.ArtistDetail(**resp)
@@ -100,8 +98,7 @@ class JioSaavnApi:
             "ctx": "web6dot0",
             "q": query,
         }
-        async with AsyncClient() as async_client:
-            resp = await async_client.get(self.jio_api_base_url, params=request_params)
+        resp = await self.client.get(self.jio_api_base_url, params=request_params)
 
         resp: dict = resp.json()
 
@@ -129,8 +126,7 @@ class JioSaavnApi:
             "_format": "json",
             "_marker": "0",
         }
-        async with AsyncClient() as async_client:
-            resp = await async_client.get(self.jio_api_base_url, params=request_params)
+        resp = await self.client.get(self.jio_api_base_url, params=request_params)
 
         resp: dict = resp.json()
 
@@ -146,8 +142,7 @@ class JioSaavnApi:
             "_format": "json",
             "_marker": "0",
         }
-        async with AsyncClient() as async_client:
-            resp = await async_client.get(self.jio_api_base_url, params=request_params)
+        resp = await self.client.get(self.jio_api_base_url, params=request_params)
 
         resp: dict = resp.json()
 

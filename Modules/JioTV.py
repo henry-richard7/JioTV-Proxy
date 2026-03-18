@@ -5,9 +5,10 @@ from random import randint
 import m3u8
 from socket import socket, AF_INET, SOCK_DGRAM
 import json
-from httpx import post, AsyncClient
+from httpx import post, AsyncClient, Limits
 from os import path
 from base64 import b64encode
+import asyncio
 
 from logging import Logger
 
@@ -38,6 +39,12 @@ class JioTV:
         self.logger = logger
         self.channel_headers = {}
         self.request_headers = {}
+        self.client = AsyncClient(
+            limits=Limits(max_keepalive_connections=50, max_connections=100)
+        )
+
+        self._cached_m3u8 = None
+        self._last_playlist_fetch = 0
 
         if path.exists(path.join("data", "jio_headers.json")):
             auth_headers = json.load(open(path.join("data", "jio_headers.json"), "r"))
@@ -58,7 +65,7 @@ class JioTV:
                 "subscriberId": auth_headers["subscriberid"],
                 "uniqueId": auth_headers["uniqueid"],
                 "appname": "RJIL_JioTV",
-                "User-Agent": "plaYtv/7.1.3 (Linux;Android 14) ExoPlayerLib/2.11.7",
+                "User-Agent": "plaYtv/7.1.5 (Linux;Android 13) ExoPlayerLib/2.11.6",
                 "usergroup": "tvYR7NSNn7rymo3F",
                 "versionCode": "331",
             }
@@ -104,7 +111,7 @@ class JioTV:
             "subscriberId": auth_headers["subscriberid"],
             "uniqueId": auth_headers["uniqueid"],
             "appname": "RJIL_JioTV",
-            "User-Agent": "plaYtv/7.1.3 (Linux;Android 14) ExoPlayerLib/2.11.7",
+            "User-Agent": "plaYtv/7.1.5 (Linux;Android 13) ExoPlayerLib/2.11.6",
             "usergroup": "tvYR7NSNn7rymo3F",
             "versionCode": "331",
         }
@@ -163,14 +170,16 @@ class JioTV:
         None
         """
 
-        response = await AsyncClient().get(
-            CHANNELS_SRC_NEW, headers=self.channel_headers
-        )
+        response = await self.client.get(CHANNELS_SRC_NEW, headers=self.channel_headers)
         response = response.json()["result"]
-        with open(r"data\channels.json", "w") as f:
-            json.dump(response, f, ensure_ascii=False, indent=4)
 
-    def sendOTP(self, mobile):
+        def _write():
+            with open(r"data\channels.json", "w") as f:
+                json.dump(response, f, ensure_ascii=False, indent=4)
+
+        await asyncio.to_thread(_write)
+
+    async def sendOTP(self, mobile):
 
         base64_encoded_phone_number = b64encode(f"+91{mobile}".encode("ascii")).decode(
             "ascii"
@@ -188,7 +197,7 @@ class JioTV:
             "user-agent": "okhttp/3.14.9",
         }
 
-        resp = post(url=url, json=json_body, headers=headers)
+        resp = await self.client.post(url=url, json=json_body, headers=headers)
 
         if resp.status_code == 204:
             return "[SUCCESS]"
@@ -196,13 +205,13 @@ class JioTV:
         else:
             return "[FAILED]"
 
-    def login(self, phone_number, otp):
+    async def login(self, phone_number, otp):
         """
-        Logs in a user with the given email and password.
+        Logs in a user with the given phone_number and otp.
 
         Args:
-            email (str): The email address of the user.
-            password (str): The password of the user.
+            phone_number (str): The phone number of the user.
+            otp (str): The otp of the user.
 
         Returns:
             str: The success or failure message.
@@ -234,7 +243,8 @@ class JioTV:
             },
         }
 
-        resp = post(url=url, json=json_body, headers=headers).json()
+        resp = await self.client.post(url=url, json=json_body, headers=headers)
+        resp = resp.json()
 
         if resp.get("ssoToken", "") != "":
             _CREDS = {
@@ -260,7 +270,7 @@ class JioTV:
                 "devicetype": "phone",
                 "os": "android",
                 "osversion": "9",
-                "user-agent": "plaYtv/7.0.8 (Linux;Android 9) ExoPlayerLib/2.11.7",
+                "user-agent": "plaYtv/7.1.5 (Linux;Android 13) ExoPlayerLib/2.11.6",
                 "usergroup": "tvYR7NSNn7rymo3F",
                 "versioncode": "289",
                 "dm": "ZUK ZUK Z1",
@@ -268,8 +278,11 @@ class JioTV:
 
             headers.update(_CREDS)
 
-            with open("data/jio_headers.json", "w") as f:
-                json.dump(headers, f, indent=4)
+            def _write():
+                with open("data/jio_headers.json", "w") as f:
+                    json.dump(headers, f, indent=4)
+
+            await asyncio.to_thread(_write)
 
             return "[SUCCESS]"
         else:
@@ -296,19 +309,22 @@ class JioTV:
                 "User-Agent": "okhttp/4.2.2",
             }
 
-            async with AsyncClient() as async_client:
-                resp = await async_client.post(
-                    REFRESH_TOKEN_URL,
-                    headers=refresh_token_headers,
-                    json=post_body,
-                )
+            resp = await self.client.post(
+                REFRESH_TOKEN_URL,
+                headers=refresh_token_headers,
+                json=post_body,
+            )
 
             resp = resp.json()
 
             if resp.get("authToken"):
                 auth_headers["accesstoken"] = resp.get("authToken")
-                with open(path.join("data", "jio_headers.json"), "w") as f:
-                    json.dump(auth_headers, f, indent=4)
+
+                def _write():
+                    with open(path.join("data", "jio_headers.json"), "w") as f:
+                        json.dump(auth_headers, f, indent=4)
+
+                await asyncio.to_thread(_write)
 
                 return True
             else:
@@ -334,7 +350,7 @@ class JioTV:
         headers["cookie"] = cookie
         headers["Content-type"] = "application/octet-stream"
 
-        resp = await AsyncClient().get(
+        resp = await self.client.get(
             uri,
             headers=headers,
         )
@@ -359,7 +375,7 @@ class JioTV:
         headers["srno"] = "240707144000"
         headers["cookie"] = cookie
 
-        resp = await AsyncClient().get(
+        resp = await self.client.get(
             uri,
             headers=headers,
         )
@@ -447,7 +463,7 @@ class JioTV:
             None: Does not raise any exceptions.
         """
         rjson = {"channel_id": int(channel_id), "stream_type": "Seek"}
-        resp = await AsyncClient().post(
+        resp = await self.client.post(
             GET_CHANNEL_URL,
             headers=self.channel_headers,
             data=rjson,
@@ -461,7 +477,7 @@ class JioTV:
         base_url = "/".join(base_url)
 
         cookie = "__hdnea__" + resp.get("result", "").split("__hdnea__")[-1]
-        first_m3u8 = await AsyncClient().get(onlyUrl, headers=self.channel_headers)
+        first_m3u8 = await self.client.get(onlyUrl, headers=self.channel_headers)
         first_m3u8 = first_m3u8.text
 
         firast_m3u8_parsed = m3u8.loads(first_m3u8)
@@ -508,7 +524,7 @@ class JioTV:
         headers["srno"] = "240707144000"
         headers["cookie"] = cookie
 
-        resp = await AsyncClient().get(
+        resp = await self.client.get(
             uri,
             headers=headers,
         )
@@ -537,9 +553,13 @@ class JioTV:
         return temp_text
 
     async def get_playlists(self, host):
-        response = await AsyncClient().get(
-            CHANNELS_SRC_NEW, headers=self.channel_headers
-        )
+        if (
+            self._cached_m3u8 is not None
+            and (time() - self._last_playlist_fetch) < 3600
+        ):
+            return self._cached_m3u8
+
+        response = await self.client.get(CHANNELS_SRC_NEW, headers=self.channel_headers)
         response = response.json()
 
         channels = response["result"]
@@ -579,7 +599,7 @@ class JioTV:
             19: "JioDarshan",
         }
 
-        m3u8 = """#EXTM3U\n"""
+        m3u8_text = """#EXTM3U\n"""
 
         for channel in channels:
             channel_id = channel["channel_id"]
@@ -588,7 +608,10 @@ class JioTV:
                 + channel["logoUrl"]
             )
             channel_name = channel["channel_name"]
-            channel_genre = genre_id[channel["channelCategoryId"]]
-            m3u8 += f'#EXTINF:-1 tvg-id="{channel_id}" group-title="{channel_genre}" tvg-logo="{channel_logo}",{channel_name}\nhttp://{host}/jiotv/m3u8?cid={channel_id}\n'
+            channel_genre = genre_id.get(channel["channelCategoryId"], "Unknown")
+            m3u8_text += f'#EXTINF:-1 tvg-id="{channel_id}" group-title="{channel_genre}" tvg-logo="{channel_logo}",{channel_name}\nhttp://{host}/jiotv/m3u8?cid={channel_id}\n'
 
-        return m3u8.strip()
+        m3u8_text = m3u8_text.strip()
+        self._cached_m3u8 = m3u8_text
+        self._last_playlist_fetch = time()
+        return m3u8_text
